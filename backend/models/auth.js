@@ -11,7 +11,19 @@ const registerUserModel = async (req, res) => {
 		throw err
 	}
 }
+const loginUserModel = async (userid) => {
+	try {
+		const result = await sql.query(`
+			Select * FROM UserAccount WHERE UserID = ${userid}
+			`)
+		return result.recordset[0]
+
+	} catch (err) {
+		throw err
+	}
+}
 
 module.exports = {
-	registerUserModel
+	registerUserModel,
+	loginUserModel
 }
