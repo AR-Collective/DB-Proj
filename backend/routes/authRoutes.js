@@ -4,6 +4,7 @@ const router = express.Router()
 
 
 router.get('/register', registerUser)
+router.get('/login')
 
 
 
