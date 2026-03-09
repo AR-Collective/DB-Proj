@@ -3,19 +3,22 @@ const jwt = require("../utils/jwt.js")
 const { hashPassword, verifyPassword } = require('../utils/hash_password.js')
 
 //TODO: error handling
-const registerUser = (req, res) => {
+const registerUser = async (req, res) => {
 	const data = req.body
-	data.password = hashPassword(data.password)
-	registerUserModel(data)
+	data.password = await hashPassword(data.password)
+	await registerUserModel(data)
 	user = {
 		id: data.userid,
 		email: data.email
 	}
 	const token = jwt.generateToken(user)
+
+	console.log(data.result)
 	res.json({
 		message: "Auth Successful",
 		token: token
 	})
+	res.end()
 }
 
 const loginUser = async (req, res) => {
