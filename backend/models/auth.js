@@ -28,7 +28,7 @@ const registerUserModel = async (data) => {
 const loginUserModel = async (userid) => {
 	try {
 		const result = await sql.query(`
-			Select * FROM UserAccount WHERE UserID = ${userid}
+			Select * FROM UserAccount WHERE UserID = '${userid}'
 			`)
 		return result.recordset[0]
 
