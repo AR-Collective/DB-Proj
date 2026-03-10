@@ -18,6 +18,7 @@ const registerUserModel = async (data) => {
 		request.input('lastLogin', sql.DateTime, now);
 		request.input('status', sql.VarChar, 'Active');
 
+
 		await request.query(query);
 
 	} catch (err) {
