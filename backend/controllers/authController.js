@@ -2,20 +2,34 @@ const { registerUserModel, loginUserModel } = require('../models/auth.js')
 const jwt = require("../utils/jwt.js")
 const { hashPassword, verifyPassword } = require('../utils/hash_password.js')
 
-//TODO: error handling
-const registerUser = (req, res) => {
-	const data = req.body
-	data.password = hashPassword(data.password)
-	registerUserModel(data)
-	user = {
-		id: data.userid,
-		email: data.email
+const registerUser = async (req, res) => {
+	try {
+		const data = req.body
+		if (!data.email || !data.password) {
+			return res.status(400).json({ message: "Missing data" })
+		}
+		data.password = await hashPassword(data.password)
+		await registerUserModel(data)
+		user = {
+			id: data.userid,
+			email: data.email
+		}
+		const token = jwt.generateToken(user)
+
+		res.status(201).json({
+			message: "Auth Successful",
+			token: token
+		})
 	}
-	const token = jwt.generateToken(user)
-	res.json({
-		message: "Auth Successful",
-		token: token
-	})
+	//TODO: make it better 
+	catch (error) {
+		console.error("Registration Error:", error);
+		res.status(500).json({
+			message: "Registration failed due to an internal server error.",
+			error: error.message
+		});
+
+	}
 }
 
 const loginUser = async (req, res) => {

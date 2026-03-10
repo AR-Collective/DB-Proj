@@ -7,4 +7,4 @@ function generateToken(user) {
 		{ expiresIn: '24h' }
 	)
 }
-module.exports = generateToken
+module.exports = { generateToken }
