@@ -1,17 +1,18 @@
-const express = require("express")
-const cors = require("cors")
-const cookies = require("cookie-parser")
+import express from "express";
+import cors from "cors";
+import cookies from "cookie-parser";
+import db from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import reqRoutes from "./routes/reqRoutes.js";
+
 const app = express()
-const db = require("./config/db.js")
-const authRoutes = require("./routes/authRoutes.js")
-const reqRoutes = require("./routes/insertreqRoutes.js")
 
 app.use(cors())
 app.use(cookies())
 app.use(express.json())
-db.connect()
+await db.connect()
 app.use('/auth', authRoutes)
-app.use('req', reqRoutes)
+app.use('/bloodrequest', reqRoutes)
 
 
 app.listen(3000, () => console.log("Backend running on port 3000"))

@@ -1,6 +1,7 @@
-const sql = require("mssql")
+import sql from "mssql"
 
-const registerUserModel = async (data) => {
+
+export const registerUserModel = async (data) => {
 	try {
 		const now = new Date();
 
@@ -25,7 +26,7 @@ const registerUserModel = async (data) => {
 		throw err;
 	}
 };
-const loginUserModel = async (userid) => {
+export const loginUserModel = async (userid) => {
 	try {
 		const result = await sql.query(`
 			Select * FROM UserAccount WHERE UserID = '${userid}'
@@ -35,9 +36,4 @@ const loginUserModel = async (userid) => {
 	} catch (err) {
 		throw err
 	}
-}
-
-module.exports = {
-	registerUserModel,
-	loginUserModel
 }

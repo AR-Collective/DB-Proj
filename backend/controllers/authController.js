@@ -1,36 +1,58 @@
-const { registerUserModel, loginUserModel } = require('../models/auth.js')
-const jwt_utils = require("../utils/jwt.js")
-const jwt = require("jsonwebtoken")
-const { hashPassword, verifyPassword } = require('../utils/hash_password.js')
+import { registerUserModel, loginUserModel } from '../models/auth.js'
+import generateToken from '../utils/jwt.js';
+import jwt from 'jsonwebtoken';
+import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
-const registerUser = async (req, res) => {
+import { getNextSerial } from "../models/misc.js"
+
+const baseRegister = async (req, res, role) => {
 	try {
-		const data = req.body
-		if (!data.email || !data.password) {
-			return res.status(400).json({ message: "Missing data" })
+		const { email, password, username } = req.body;
+
+		if (!email || !password || !username) {
+			return res.status(400).json({ message: "Missing email or password or username" });
 		}
-		data.password = await hashPassword(data.password)
-		await registerUserModel(data)
-		user = {
-			id: data.userid,
-			email: data.email
+
+		const userid = await getNextSerial(role);
+		const hashedPassword = await hashPassword(password);
+
+		const data = {
+			username,
+			userid,
+			email,
+			password: hashedPassword,
+			role
+		};
+
+		const token = await registerUser(data);
+
+		res.cookie("auth_token", token, { httpOnly: true, secure: true });
+		return res.status(201).json({ message: "Logged in", userid });
+	} catch (error) {
+		console.error(`${role} Registration Error:`, error);
+		if (error.number == 2627 && error.message.includes('UQ_User_Role_Email')) {
+			return res.status(409).json({
+				message: "A user with this email and role already exists."
+			});
 		}
-		const token = jwt_utils.generateToken(user)
-		res.cookie("auth_token", token, { httpOnly: true, secure: true })
-		res.status(201).json({ message: "Logged in" });
-	}
-	//TODO: make it better 
-	catch (error) {
-		console.error("Registration Error:", error);
-		res.status(500).json({
+		return res.status(500).json({
 			message: "Registration failed due to an internal server error.",
 			error: error.message
 		});
-
 	}
+};
+
+export const registerDonor = (req, res) => baseRegister(req, res, "Donor");
+export const registerStaff = (req, res) => baseRegister(req, res, "Staff");
+export const registerPatient = (req, res) => baseRegister(req, res, "Patient");
+
+export const registerUser = async (data) => {
+	await registerUserModel(data)
+	const token = generateToken(data)
+	return token
 }
 
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
 	const cookie = req.cookies.auth_token
 	if (cookie) {
 		if (jwt.verify(cookie, process.env.JWT_SECRET)) {
@@ -48,7 +70,7 @@ const loginUser = async (req, res) => {
 			id: userid,
 			email: record.email
 		}
-		const token = jwt_utils.generateToken(user)
+		const token = generateToken(user)
 		res.cookie("auth_token", token, { httpOnly: true, secure: true })
 		res.json({
 			message: "Auth Successful"
@@ -57,9 +79,4 @@ const loginUser = async (req, res) => {
 	else {
 		res.status(400).json({ message: "Invalid Password" })
 	}
-}
-
-module.exports = {
-	registerUser,
-	loginUser
 }
