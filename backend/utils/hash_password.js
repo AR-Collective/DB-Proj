@@ -1,12 +1,8 @@
-const argon2 = require("argon2");
+import argon2 from "argon2"
 
-const hashPassword = async (password) => {
+export const hashPassword = async (password) => {
 	return await argon2.hash(password);
 }
-const verifyPassword = async (hash, password) => {
+export const verifyPassword = async (hash, password) => {
 	return await argon2.verify(hash, password);
-}
-module.exports = {
-	hashPassword,
-	verifyPassword
 }

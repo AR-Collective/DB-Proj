@@ -1,36 +1,40 @@
-const { registerUserModel, loginUserModel } = require('../models/auth.js')
-const jwt_utils = require("../utils/jwt.js")
-const jwt = require("jsonwebtoken")
-const { hashPassword, verifyPassword } = require('../utils/hash_password.js')
+import { registerUserModel, loginUserModel } from '../models/auth.js'
+import jwt_utils from '../utils/jwt.js';
+import jwt from 'jsonwebtoken';
+import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
-const registerUser = async (req, res) => {
+
+export const registerDonor = async (req, res) => {
 	try {
-		const data = req.body
-		if (!data.email || !data.password) {
-			return res.status(400).json({ message: "Missing data" })
+		console.log(req)
+		if (!req.body.email || !req.body.password) {
+			return res.status(400).json({ message: "Missing email or password" })
 		}
-		data.password = await hashPassword(data.password)
-		await registerUserModel(data)
-		user = {
-			id: data.userid,
-			email: data.email
+		const data = {
+			email: req.body.email,
+			password: await hashPassword(req.body.password),
+			role: "Donor"
 		}
-		const token = jwt_utils.generateToken(user)
+		const token = await registerUser(data)
 		res.cookie("auth_token", token, { httpOnly: true, secure: true })
 		res.status(201).json({ message: "Logged in" });
 	}
-	//TODO: make it better 
 	catch (error) {
 		console.error("Registration Error:", error);
 		res.status(500).json({
 			message: "Registration failed due to an internal server error.",
 			error: error.message
 		});
-
 	}
 }
 
-const loginUser = async (req, res) => {
+export const registerUser = async (data) => {
+	newUser = await registerUserModel(data)
+	const token = jwt_utils.generateToken(newUser)
+	return token
+}
+
+export const loginUser = async (req, res) => {
 	const cookie = req.cookies.auth_token
 	if (cookie) {
 		if (jwt.verify(cookie, process.env.JWT_SECRET)) {
@@ -57,9 +61,4 @@ const loginUser = async (req, res) => {
 	else {
 		res.status(400).json({ message: "Invalid Password" })
 	}
-}
-
-module.exports = {
-	registerUser,
-	loginUser
 }
