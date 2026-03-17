@@ -11,9 +11,7 @@ export const registerUserModel = async (data) => {
 		    `;
 
 		const request = new sql.Request();
-		// TODO: Should auto generate
 		request.input('userid', sql.VarChar, data.userid);
-
 		request.input('username', sql.VarChar, data.username);
 		request.input('email', sql.VarChar, data.email);
 		request.input('password', sql.VarChar, data.password);

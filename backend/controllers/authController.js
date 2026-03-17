@@ -1,16 +1,22 @@
 import { registerUserModel, loginUserModel } from '../models/auth.js'
-import jwt_utils from '../utils/jwt.js';
+import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
+
+import { getNextSerial } from "../models/misc.js"
 
 
 export const registerDonor = async (req, res) => {
 	try {
-		console.log(req)
-		if (!req.body.email || !req.body.password) {
-			return res.status(400).json({ message: "Missing email or password" })
+
+		const userid = await getNextSerial("Donor")
+
+		if (!req.body.email || !req.body.password || !req.body.username) {
+			return res.status(400).json({ message: "Missing email or password or username" })
 		}
 		const data = {
+			username: req.body.username,
+			userid: userid,
 			email: req.body.email,
 			password: await hashPassword(req.body.password),
 			role: "Donor"
@@ -29,8 +35,8 @@ export const registerDonor = async (req, res) => {
 }
 
 export const registerUser = async (data) => {
-	newUser = await registerUserModel(data)
-	const token = jwt_utils.generateToken(newUser)
+	await registerUserModel(data)
+	const token = generateToken(data)
 	return token
 }
 
@@ -52,7 +58,7 @@ export const loginUser = async (req, res) => {
 			id: userid,
 			email: record.email
 		}
-		const token = jwt_utils.generateToken(user)
+		const token = generateToken(user)
 		res.cookie("auth_token", token, { httpOnly: true, secure: true })
 		res.json({
 			message: "Auth Successful"
