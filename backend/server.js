@@ -9,7 +9,7 @@ const app = express()
 app.use(cors())
 app.use(cookies())
 app.use(express.json())
-db.connect()
+await db.connect()
 app.use('/auth', authRoutes)
 
 
