@@ -5,34 +5,41 @@ import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
 import { getNextSerial } from "../models/misc.js"
 
-
-export const registerDonor = async (req, res) => {
+const baseRegister = async (req, res, role) => {
 	try {
+		const { email, password, username } = req.body;
 
-		const userid = await getNextSerial("Donor")
-
-		if (!req.body.email || !req.body.password || !req.body.username) {
-			return res.status(400).json({ message: "Missing email or password or username" })
+		if (!email || !password || !username) {
+			return res.status(400).json({ message: "Missing email or password or username" });
 		}
+
+		const userid = await getNextSerial(role);
+		const hashedPassword = await hashPassword(password);
+
 		const data = {
-			username: req.body.username,
-			userid: userid,
-			email: req.body.email,
-			password: await hashPassword(req.body.password),
-			role: "Donor"
-		}
-		const token = await registerUser(data)
-		res.cookie("auth_token", token, { httpOnly: true, secure: true })
-		res.status(201).json({ message: "Logged in" });
-	}
-	catch (error) {
-		console.error("Registration Error:", error);
-		res.status(500).json({
+			username,
+			userid,
+			email,
+			password: hashedPassword,
+			role
+		};
+
+		const token = await registerUser(data);
+
+		res.cookie("auth_token", token, { httpOnly: true, secure: true });
+		return res.status(201).json({ message: "Logged in", userid });
+	} catch (error) {
+		console.error(`${role} Registration Error:`, error);
+		return res.status(500).json({
 			message: "Registration failed due to an internal server error.",
 			error: error.message
 		});
 	}
-}
+};
+
+export const registerDonor = (req, res) => baseRegister(req, res, "Donor");
+export const registerStaff = (req, res) => baseRegister(req, res, "Staff");
+export const registerPatient = (req, res) => baseRegister(req, res, "Patient");
 
 export const registerUser = async (data) => {
 	await registerUserModel(data)
