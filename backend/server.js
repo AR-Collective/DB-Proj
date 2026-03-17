@@ -1,9 +1,10 @@
-const express = require("express")
-const cors = require("cors")
-const cookies = require("cookie-parser")
+import express from "express";
+import cors from "cors";
+import cookies from "cookie-parser";
+import db from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+
 const app = express()
-const db = require("./config/db.js")
-const authRoutes = require("./routes/authRoutes.js")
 
 app.use(cors())
 app.use(cookies())

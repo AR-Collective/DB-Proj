@@ -1,6 +1,7 @@
-const sql = require("mssql")
+import sql from "mssql"
 
-const registerUserModel = async (data) => {
+
+export const registerUserModel = async (data) => {
 	try {
 		const now = new Date();
 
@@ -10,7 +11,9 @@ const registerUserModel = async (data) => {
 		    `;
 
 		const request = new sql.Request();
+		// TODO: Should auto generate
 		request.input('userid', sql.VarChar, data.userid);
+
 		request.input('username', sql.VarChar, data.username);
 		request.input('email', sql.VarChar, data.email);
 		request.input('password', sql.VarChar, data.password);
@@ -25,7 +28,7 @@ const registerUserModel = async (data) => {
 		throw err;
 	}
 };
-const loginUserModel = async (userid) => {
+export const loginUserModel = async (userid) => {
 	try {
 		const result = await sql.query(`
 			Select * FROM UserAccount WHERE UserID = '${userid}'
@@ -35,9 +38,4 @@ const loginUserModel = async (userid) => {
 	} catch (err) {
 		throw err
 	}
-}
-
-module.exports = {
-	registerUserModel,
-	loginUserModel
 }
