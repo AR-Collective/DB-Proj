@@ -5,7 +5,6 @@ import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
 import { getNextSerial } from "../models/misc.js"
 
-
 const baseRegister = async (req, res, role) => {
 	try {
 		const { email, password, username } = req.body;
