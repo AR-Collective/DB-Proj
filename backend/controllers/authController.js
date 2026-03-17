@@ -30,6 +30,11 @@ const baseRegister = async (req, res, role) => {
 		return res.status(201).json({ message: "Logged in", userid });
 	} catch (error) {
 		console.error(`${role} Registration Error:`, error);
+		if (error.number == 2627 && error.message.includes('UQ_User_Role_Email')) {
+			return res.status(409).json({
+				message: "A user with this email and role already exists."
+			});
+		}
 		return res.status(500).json({
 			message: "Registration failed due to an internal server error.",
 			error: error.message
