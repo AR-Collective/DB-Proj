@@ -29,7 +29,7 @@ const getBloodUnit = async(data) => {
                             SELECT BloodGroupID FROM BloodRequest
                             WHERE RequestID = @requestid
                         )`
-
+        // maybe add Status = 'Available' later
         const request = new sql.Request();
         request.input('requestid', sql.INT, data.requestid);
 
