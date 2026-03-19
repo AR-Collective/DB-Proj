@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express'
 const router = express.Router()
-const { insertBloodRequest, getRequestsByHospital, fulfillRequest } = require('../controllers/reqController.js')
-const verifyToken = require("../middleware/authMiddleware.js")
+import { insertBloodRequest, getRequestsByHospital, fulfillRequest } from '../controllers/BReqController.js'
+import verifyToken from "../middleware/authMiddleware.js"
 
 router.use(verifyToken)
 router.post('/insertBReq', insertBloodRequest)
 
-module.exports = router;
+export default router

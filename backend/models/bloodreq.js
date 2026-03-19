@@ -1,4 +1,4 @@
-const sql = require('mssql')
+import sql from 'mssql'
 
 
 const newBloodRequest = async(data) => {
@@ -22,6 +22,6 @@ const newBloodRequest = async(data) => {
     }
 }
 
-module.exports={
+export{
     newBloodRequest
 }
