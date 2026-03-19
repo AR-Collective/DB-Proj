@@ -1,4 +1,4 @@
-const { newBloodRequest } = require('../models/bloodreq.js')
+import { newBloodRequest, getBloodUnit } from '../models/bloodreq.js'
 
 const insertBloodRequest = async (req,res) => {
     try{
@@ -24,8 +24,32 @@ const insertBloodRequest = async (req,res) => {
     }
 }
 
-module.exports = {
-    insertBloodRequest
+const getBloodUnits = async (req, res) => {
+    try{
+        const {breqid} = req.body
+
+        if (!breqid){
+            return res.status(400).json({message: "Blood Request ID is missing"});
+        }
+        const result = await getBloodUnit({requestid: breqid});
+        res.status(200).json({
+            message: "BloodUnit get is successful!",
+            data: result.recordset
+        })
+    }
+    catch(error)
+    {
+        console.error("Blood Unit get error: ", error);
+        res.status(500).json({
+            message: "Getting blood unit failed due to an internal server error",
+            error: error.message
+        });
+    }
+}
+
+export {
+    insertBloodRequest,
+    getBloodUnits
     //getRequestsByHospital,
     //fulfillRequest
 }

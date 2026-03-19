@@ -1,9 +1,10 @@
 import express from 'express'
-const router = express.Router()
-import { insertBloodRequest, getRequestsByHospital, fulfillRequest } from '../controllers/BReqController.js'
+import { insertBloodRequest, getBloodUnits } from '../controllers/BReqController.js'
 import verifyToken from "../middleware/authMiddleware.js"
 
+const router = express.Router()
 router.use(verifyToken)
 router.post('/insertBReq', insertBloodRequest)
+router.get('/getBU', getBloodUnits)
 
 export default router
