@@ -1,4 +1,4 @@
-import { getInventoryByLocation, getExpiringUnits as getExpiringUnitsModel, removeExpiredUnits as removeExpiredUnitsModel, getBloodDemandByType } from '../models/inventory.js'
+import { getInventoryByLocation, getExpiringUnits as getExpiringUnitsModel, removeExpiredUnits as removeExpiredUnitsModel, getBloodDemandByType, getBloodAvailabilityReport } from '../models/inventory.js'
 
 const getBloodInventory = async (req, res) => {
     try {
@@ -74,4 +74,21 @@ const getBloodDemand = async (req, res) => {
     }
 }
 
-export { getBloodInventory, getExpiringUnits, removeExpiredUnits, getBloodDemand }
+const getAvailabilityReport = async (req, res) => {
+    try {
+        const result = await getBloodAvailabilityReport()
+
+        res.status(200).json({
+            message: "Blood availability report retrieved successfully",
+            data: result.recordset
+        })
+    } catch (error) {
+        console.error("Get availability report error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve availability report",
+            error: error.message
+        })
+    }
+}
+
+export { getBloodInventory, getExpiringUnits, removeExpiredUnits, getBloodDemand, getAvailabilityReport }

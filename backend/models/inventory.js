@@ -70,4 +70,31 @@ const getBloodDemandByType = async () => {
     }
 }
 
-export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType }
+const getBloodAvailabilityReport = async () => {
+    try {
+        const query = `
+            SELECT b.BloodType, SUM(bu.Quantity) as TotalQuantity, bu.Status
+            FROM BloodUnit bu
+            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
+            WHERE bu.Status = 'Available'
+            GROUP BY b.BloodType, bu.Status
+            
+            UNION
+            
+            SELECT b.BloodType, SUM(bu.Quantity) as TotalQuantity, bu.Status
+            FROM BloodUnit bu
+            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
+            WHERE bu.Status = 'Reserved'
+            GROUP BY b.BloodType, bu.Status
+            
+            ORDER BY BloodType, Status
+        `
+        const request = new sql.Request()
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType, getBloodAvailabilityReport }
