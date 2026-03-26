@@ -52,4 +52,22 @@ const removeExpiredUnits = async () => {
     }
 }
 
-export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits }
+const getBloodDemandByType = async () => {
+    try {
+        const query = `
+            SELECT b.BloodType, COUNT(br.RequestID) as DemandCount
+            FROM BloodRequest br
+            JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
+            GROUP BY b.BloodType, b.BloodGroupID
+            HAVING COUNT(br.RequestID) > 0
+            ORDER BY DemandCount DESC
+        `
+        const request = new sql.Request()
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType }
