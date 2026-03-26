@@ -72,4 +72,27 @@ const getAverageDonationsPerDonor = async () => {
     }
 }
 
-export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor }
+const getDonorsNeverTested = async () => {
+    try {
+        const query = `
+            SELECT d.DonorID, d.Name, d.Contact, d.Age, b.BloodType
+            FROM Donor d
+            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID NOT IN (
+                SELECT DISTINCT donor.DonorID
+                FROM Donation dn
+                INNER JOIN Donor donor ON dn.DonorID = donor.DonorID
+                INNER JOIN TestResult tr ON dn.DonationID = tr.DonationID
+                WHERE tr.ScreeningStatus = 'Pass'
+            )
+            ORDER BY d.Name ASC
+        `
+        const request = new sql.Request()
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested }
