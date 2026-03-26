@@ -40,4 +40,21 @@ const getExpiringUnits = async (req, res) => {
     }
 }
 
-export { getBloodInventory, getExpiringUnits }
+const removeExpiredUnits = async (req, res) => {
+    try {
+        const result = await removeExpiredUnits()
+
+        res.status(200).json({
+            message: "Expired blood units removed successfully",
+            data: result.recordset
+        })
+    } catch (error) {
+        console.error("Remove expired units error: ", error)
+        res.status(500).json({
+            message: "Failed to remove expired units",
+            error: error.message
+        })
+    }
+}
+
+export { getBloodInventory, getExpiringUnits, removeExpiredUnits }
