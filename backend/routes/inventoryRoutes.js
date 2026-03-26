@@ -7,6 +7,6 @@ const router = express.Router()
 router.use(verifyToken)
 router.get('/by-location', getBloodInventory)
 router.get('/expiring', getExpiringUnits)
-
+router.delete('/remove-expired', removeExpiredUnits)
 
 export default router

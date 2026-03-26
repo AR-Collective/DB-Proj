@@ -38,4 +38,18 @@ const getExpiringUnits = async (days) => {
     }
 }
 
-export { getInventoryByLocation, getExpiringUnits }
+const removeExpiredUnits = async () => {
+    try {
+        const query = `
+            DELETE FROM BloodUnit
+            WHERE ExpirationDate < GETDATE()
+        `
+        const request = new sql.Request()
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits }
