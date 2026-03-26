@@ -1,4 +1,4 @@
-import { getInventoryByLocation } from '../models/inventory.js'
+import { getInventoryByLocation, getExpiringUnits as getExpiringUnitsModel, removeExpiredUnits as removeExpiredUnitsModel, getBloodDemandByType } from '../models/inventory.js'
 
 const getBloodInventory = async (req, res) => {
     try {
@@ -25,7 +25,7 @@ const getExpiringUnits = async (req, res) => {
             return res.status(400).json({ message: "Days parameter is missing" })
         }
 
-        const result = await getExpiringUnits(days)
+        const result = await getExpiringUnitsModel(days)
 
         res.status(200).json({
             message: "Expiring blood units retrieved successfully",
@@ -42,7 +42,7 @@ const getExpiringUnits = async (req, res) => {
 
 const removeExpiredUnits = async (req, res) => {
     try {
-        const result = await removeExpiredUnits()
+        const result = await removeExpiredUnitsModel()
 
         res.status(200).json({
             message: "Expired blood units removed successfully",
@@ -57,4 +57,21 @@ const removeExpiredUnits = async (req, res) => {
     }
 }
 
-export { getBloodInventory, getExpiringUnits, removeExpiredUnits }
+const getBloodDemand = async (req, res) => {
+    try {
+        const result = await getBloodDemandByType()
+
+        res.status(200).json({
+            message: "Blood demand by type retrieved successfully",
+            data: result.recordset
+        })
+    } catch (error) {
+        console.error("Get blood demand error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve blood demand",
+            error: error.message
+        })
+    }
+}
+
+export { getBloodInventory, getExpiringUnits, removeExpiredUnits, getBloodDemand }
