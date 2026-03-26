@@ -17,4 +17,27 @@ const getBloodInventory = async (req, res) => {
     }
 }
 
-export { getBloodInventory }
+const getExpiringUnits = async (req, res) => {
+    try {
+        const { days } = req.query
+        
+        if (!days) {
+            return res.status(400).json({ message: "Days parameter is missing" })
+        }
+
+        const result = await getExpiringUnits(days)
+
+        res.status(200).json({
+            message: "Expiring blood units retrieved successfully",
+            data: result.recordset
+        })
+    } catch (error) {
+        console.error("Get expiring units error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve expiring units",
+            error: error.message
+        })
+    }
+}
+
+export { getBloodInventory, getExpiringUnits }
