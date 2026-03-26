@@ -1,4 +1,4 @@
-import { searchDonorByBloodType, getDonorHistory, updateDonorRating } from '../models/donor.js'
+import { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor } from '../models/donor.js'
 
 const searchDonors = async (req, res) => {
     try {
@@ -72,4 +72,21 @@ const rateDonor = async (req, res) => {
     }
 }
 
-export { searchDonors, getDonations, rateDonor }
+const getAverageDonations = async (req, res) => {
+    try {
+        const result = await getAverageDonationsPerDonor()
+
+        res.status(200).json({
+            message: "Average donations per donor retrieved successfully",
+            data: result.recordset
+        })
+    } catch (error) {
+        console.error("Get average donations error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve average donations",
+            error: error.message
+        })
+    }
+}
+
+export { searchDonors, getDonations, rateDonor, getAverageDonations }

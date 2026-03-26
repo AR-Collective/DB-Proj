@@ -54,4 +54,22 @@ const updateDonorRating = async (donorId, rating) => {
     }
 }
 
-export { searchDonorByBloodType, getDonorHistory, updateDonorRating }
+const getAverageDonationsPerDonor = async () => {
+    try {
+        const query = `
+            SELECT d.DonorID, d.Name, d.Contact, COUNT(dn.DonationID) as TotalDonations,
+                   AVG(dn.Quantity) as AverageDonationQuantity
+            FROM Donor d
+            LEFT JOIN Donation dn ON d.DonorID = dn.DonorID
+            GROUP BY d.DonorID, d.Name, d.Contact
+            ORDER BY TotalDonations DESC
+        `
+        const request = new sql.Request()
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor }
