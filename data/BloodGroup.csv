@@ -1,0 +1,9 @@
+BloodGroupID,BloodType,CompatibilityNotes,DemandLevel
+1,A+,Notes...,High
+2,A-,Notes...,Low
+3,B+,Notes...,Medium
+4,B-,Notes...,Low
+5,AB+,Notes...,Medium
+6,AB-,Notes...,Medium
+7,O+,Notes...,Medium
+8,O-,Notes...,Medium

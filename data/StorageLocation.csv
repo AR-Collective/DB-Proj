@@ -1,0 +1,11 @@
+LocationID,LocationName,Address,Capacity,ContactPerson,Distance
+1,Bank 0,Address 0,1000,Person 0,44.08
+2,Bank 1,Address 1,1000,Person 1,27.29
+3,Bank 2,Address 2,1000,Person 2,14.78
+4,Bank 3,Address 3,1000,Person 3,6.88
+5,Bank 4,Address 4,1000,Person 4,40.65
+6,Bank 5,Address 5,1000,Person 5,4.07
+7,Bank 6,Address 6,1000,Person 6,38.72
+8,Bank 7,Address 7,1000,Person 7,38.93
+9,Bank 8,Address 8,1000,Person 8,29.24
+10,Bank 9,Address 9,1000,Person 9,28.21
