@@ -17,4 +17,24 @@ const searchDonorByBloodType = async (bloodType) => {
     }
 }
 
-export { searchDonorByBloodType }
+const getDonorHistory = async (donorId) => {
+    try {
+        const query = `
+            SELECT d.DonationID, d.DonorID, d.DonationDate, d.Quantity, d.StaffID, 
+                   donor.Name, donor.Contact, b.BloodType
+            FROM Donation d
+            JOIN Donor donor ON d.DonorID = donor.DonorID
+            JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID = @donorid
+            ORDER BY d.DonationDate DESC
+        `
+        const request = new sql.Request()
+        request.input('donorid', sql.VarChar, donorId)
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { searchDonorByBloodType, getDonorHistory }
