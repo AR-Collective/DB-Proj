@@ -5,6 +5,7 @@ import db from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import reqRoutes from "./routes/reqRoutes.js";
 import donorRoutes from "./routes/donorRoutes.js";
+import inventoryRoutes from "./routes/inventoryRoutes.js";
 
 const app = express()
 
@@ -15,6 +16,7 @@ await db.connect()
 app.use('/auth', authRoutes)
 app.use('/bloodrequest', reqRoutes)
 app.use('/donor', donorRoutes)
+app.use('/inventory', inventoryRoutes)
 
 
 app.listen(3000, () => console.log("Backend running on port 3000"))
