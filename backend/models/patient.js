@@ -21,4 +21,24 @@ const getCompatibleBloodForPatient = async (patientId) => {
     }
 }
 
-export { getCompatibleBloodForPatient }
+const searchPatientByDisease = async (disease) => {
+    try {
+        const query = `
+            SELECT p.PatientID, p.Name, p.Age, p.Gender, p.Disease, h.Name as HospitalName,
+                   b.BloodType
+            FROM Patient p
+            JOIN Hospital h ON p.HospitalID = h.HospitalID
+            JOIN BloodGroup b ON p.BloodGroupID = b.BloodGroupID
+            WHERE p.Disease LIKE @disease
+            ORDER BY p.Name ASC
+        `
+        const request = new sql.Request()
+        request.input('disease', sql.VarChar, `%${disease}%`)
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { getCompatibleBloodForPatient, searchPatientByDisease }
