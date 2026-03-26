@@ -7,6 +7,7 @@ import reqRoutes from "./routes/reqRoutes.js";
 import donorRoutes from "./routes/donorRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import hospitalRoutes from "./routes/hospitalRoutes.js";
+import patientRoutes from "./routes/patientRoutes.js";
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.use('/bloodrequest', reqRoutes)
 app.use('/donor', donorRoutes)
 app.use('/inventory', inventoryRoutes)
 app.use('/hospital', hospitalRoutes)
+app.use('/patient', patientRoutes)
 
 
 app.listen(3000, () => console.log("Backend running on port 3000"))
