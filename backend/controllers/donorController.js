@@ -1,4 +1,4 @@
-import { searchDonorByBloodType, getDonorHistory } from '../models/donor.js'
+import { searchDonorByBloodType, getDonorHistory, updateDonorRating } from '../models/donor.js'
 
 const searchDonors = async (req, res) => {
     try {
@@ -46,4 +46,30 @@ const getDonations = async (req, res) => {
     }
 }
 
-export { searchDonors, getDonations }
+const rateDonor = async (req, res) => {
+    try {
+        const { donorid, rating } = req.body
+
+        if (!donorid || rating === undefined) {
+            return res.status(400).json({ message: "Donor ID and rating are required" })
+        }
+
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "Rating must be between 1 and 5" })
+        }
+
+        await updateDonorRating(donorid, rating)
+
+        res.status(200).json({
+            message: "Donor rating updated successfully"
+        })
+    } catch (error) {
+        console.error("Rate donor error: ", error)
+        res.status(500).json({
+            message: "Failed to update donor rating",
+            error: error.message
+        })
+    }
+}
+
+export { searchDonors, getDonations, rateDonor }

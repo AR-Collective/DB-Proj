@@ -37,4 +37,21 @@ const getDonorHistory = async (donorId) => {
     }
 }
 
-export { searchDonorByBloodType, getDonorHistory }
+const updateDonorRating = async (donorId, rating) => {
+    try {
+        const query = `
+            UPDATE Donor
+            SET Rating = @rating
+            WHERE DonorID = @donorid
+        `
+        const request = new sql.Request()
+        request.input('donorid', sql.VarChar, donorId)
+        request.input('rating', sql.INT, rating)
+        
+        return await request.query(query)
+    } catch (err) {
+        throw err
+    }
+}
+
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating }
