@@ -1,4 +1,4 @@
-import { newBloodRequest, getBloodUnit } from '../models/bloodreq.js'
+import { newBloodRequest, getBloodUnit, getReqByHospital } from '../models/bloodreq.js'
 
 const insertBloodRequest = async (req,res) => {
     try{
@@ -46,10 +46,34 @@ const getBloodUnits = async (req, res) => {
         });
     }
 }
+const getRequestsByHospital = async (req,res)=> {
+    try {
+        const {hospitalid} = req.body
+
+        if (!hospitalid)
+    {
+            return res.status(400).json({message: "Hospital ID is missing"});
+        }
+        const result = await getReqByHospital({hospitalid:hospitalid});
+        res.status(200).json({
+            message: "BloodRequest get is successful",
+            data: result.recordset
+        })
+    }
+    catch(error)
+{
+        console.error("BloodRequest get error: ", error);
+        res.status(500).json({
+            message: "Getting Blood Request failed due to an internal server error",
+            error: error.message
+        });
+    }
+}
+
 
 export {
     insertBloodRequest,
-    getBloodUnits
-    //getRequestsByHospital,
+    getBloodUnits,
+    getRequestsByHospital
     //fulfillRequest
 }

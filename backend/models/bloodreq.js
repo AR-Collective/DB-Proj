@@ -28,7 +28,7 @@ const getBloodUnit = async(data) => {
                         WHERE BU.BloodGroupID = (
                             SELECT BloodGroupID FROM BloodRequest
                             WHERE RequestID = @requestid
-                        )`
+                        );`;
         // maybe add Status = 'Available' later
         const request = new sql.Request();
         request.input('requestid', sql.INT, data.requestid);
@@ -39,7 +39,25 @@ const getBloodUnit = async(data) => {
         throw err;
     }
 }
+
+const getReqByHospital = async(data) => {
+    try{
+        const query =  `SELECT * FROM BloodRequest
+                        WHERE HospitalID = @hospitalid;`;
+
+        const request = new sql.Request();
+        request.input('hospitalid',sql.INT, data.hospitalid);
+
+        return await request.query(query);
+    }
+    catch(err)
+    {
+        throw err;
+    }
+}
+
 export{
     getBloodUnit,
-    newBloodRequest
+    newBloodRequest,
+    getReqByHospital
 }
