@@ -62,12 +62,12 @@ export const loginUser = async (req, res) => {
 		}
 		return
 	}
-	const { userid, password } = req.body
-	const record = await loginUserModel(userid) //returns record if exist
+	const { username, password } = req.body
+	const record = await loginUserModel(username) //returns record if exist
 	const isPasswordCorrect = await verifyPassword(record.Password, password)
 	if (isPasswordCorrect) {
-		user = {
-			id: userid,
+		const user = {
+			id: record.Userid,
 			email: record.email
 		}
 		const token = generateToken(user)

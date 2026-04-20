@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 
 function verifyToken(req, res, next) {
+	// ? here means if authorization doesnt exists in header then dont try to split
 	const token = req.headers['authorization']?.split(' ')[1]
 
 	if (!token) {
