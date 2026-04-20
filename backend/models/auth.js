@@ -26,10 +26,10 @@ export const registerUserModel = async (data) => {
 		throw err;
 	}
 };
-export const loginUserModel = async (userid) => {
+export const loginUserModel = async (username) => {
 	try {
 		const result = await sql.query(`
-			Select * FROM UserAccount WHERE UserID = '${userid}'
+			Select * FROM UserAccount WHERE Username = '${username}'
 			`)
 		return result.recordset[0]
 
