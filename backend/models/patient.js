@@ -1,4 +1,4 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const getCompatibleBloodForPatient = async (patientId) => {
     try {
@@ -11,15 +11,13 @@ const getCompatibleBloodForPatient = async (patientId) => {
             LEFT JOIN StorageLocation sl ON bu.LocationID = sl.LocationID
             WHERE p.PatientID = @patientid
             ORDER BY bu.ExpiryDate ASC
-        `
-        const request = new sql.Request()
-        request.input('patientid', sql.VarChar, patientId)
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query, { patientid: patientId });
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const searchPatientByDisease = async (disease) => {
     try {
@@ -31,14 +29,12 @@ const searchPatientByDisease = async (disease) => {
             JOIN BloodGroup b ON p.BloodGroupID = b.BloodGroupID
             WHERE p.Disease LIKE @disease
             ORDER BY p.Name ASC
-        `
-        const request = new sql.Request()
-        request.input('disease', sql.VarChar, `%${disease}%`)
-        
-        return await request.query(query)
-    } catch (err) {
-        throw err
-    }
-}
+        `;
 
-export { getCompatibleBloodForPatient, searchPatientByDisease }
+        return await db.query(query, { disease: `%${disease}%` });
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { getCompatibleBloodForPatient, searchPatientByDisease };

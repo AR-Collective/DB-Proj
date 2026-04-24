@@ -1,4 +1,4 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const getInventoryByLocation = async () => {
     try {
@@ -10,14 +10,13 @@ const getInventoryByLocation = async () => {
             JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
             GROUP BY sl.LocationID, sl.LocationName, sl.Address, sl.Capacity, b.BloodType
             ORDER BY sl.LocationName, b.BloodType
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query);
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getExpiringUnits = async (days) => {
     try {
@@ -26,31 +25,28 @@ const getExpiringUnits = async (days) => {
             FROM BloodUnit bu
             JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
             JOIN StorageLocation sl ON bu.LocationID = sl.LocationID
-            WHERE DATEDIFF(day, GETDATE(), bu.ExpirationDate) <= @days
+            WHERE DATEDIFF(bu.ExpirationDate, CURDATE()) <= @days
             ORDER BY bu.ExpirationDate ASC
-        `
-        const request = new sql.Request()
-        request.input('days', sql.Int, days)
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query, { days });
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const removeExpiredUnits = async () => {
     try {
         const query = `
             DELETE FROM BloodUnit
-            WHERE ExpirationDate < GETDATE()
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+            WHERE ExpirationDate < CURDATE()
+        `;
+
+        return await db.query(query);
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getBloodDemandByType = async () => {
     try {
@@ -61,14 +57,13 @@ const getBloodDemandByType = async () => {
             GROUP BY b.BloodType, b.BloodGroupID
             HAVING COUNT(br.RequestID) > 0
             ORDER BY DemandCount DESC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query);
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getBloodAvailabilityReport = async () => {
     try {
@@ -88,13 +83,12 @@ const getBloodAvailabilityReport = async () => {
             GROUP BY b.BloodType, bu.Status
             
             ORDER BY BloodType, Status
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
-    } catch (err) {
-        throw err
-    }
-}
+        `;
 
-export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType, getBloodAvailabilityReport }
+        return await db.query(query);
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType, getBloodAvailabilityReport };

@@ -1,4 +1,4 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const getTestResultsForDonations = async () => {
     try {
@@ -11,13 +11,12 @@ const getTestResultsForDonations = async () => {
             JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
             LEFT JOIN Patient p ON tr.PatientID = p.PatientID
             ORDER BY tr.TestDate DESC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query);
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 export { getTestResultsForDonations }

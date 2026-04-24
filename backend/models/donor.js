@@ -1,4 +1,4 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const searchDonorByBloodType = async (bloodType) => {
     try {
@@ -7,15 +7,13 @@ const searchDonorByBloodType = async (bloodType) => {
             FROM Donor d
             JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
             WHERE b.BloodType = @bloodtype
-        `
-        const request = new sql.Request()
-        request.input('bloodtype', sql.VarChar, bloodType)
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query, { bloodtype: bloodType });
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getDonorHistory = async (donorId) => {
     try {
@@ -27,15 +25,13 @@ const getDonorHistory = async (donorId) => {
             JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
             WHERE d.DonorID = @donorid
             ORDER BY d.DonationDate DESC
-        `
-        const request = new sql.Request()
-        request.input('donorid', sql.VarChar, donorId)
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query, { donorid: donorId });
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const updateDonorRating = async (donorId, rating) => {
     try {
@@ -43,16 +39,13 @@ const updateDonorRating = async (donorId, rating) => {
             UPDATE Donor
             SET Rating = @rating
             WHERE DonorID = @donorid
-        `
-        const request = new sql.Request()
-        request.input('donorid', sql.VarChar, donorId)
-        request.input('rating', sql.INT, rating)
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query, { donorid: donorId, rating });
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getAverageDonationsPerDonor = async () => {
     try {
@@ -63,14 +56,13 @@ const getAverageDonationsPerDonor = async () => {
             LEFT JOIN Donation dn ON d.DonorID = dn.DonorID
             GROUP BY d.DonorID, d.Name, d.Contact
             ORDER BY TotalDonations DESC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        `;
+
+        return await db.query(query);
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getDonorsNeverTested = async () => {
     try {
@@ -86,13 +78,12 @@ const getDonorsNeverTested = async () => {
                 WHERE tr.ScreeningStatus = 'Pass'
             )
             ORDER BY d.Name ASC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
-    } catch (err) {
-        throw err
-    }
-}
+        `;
 
-export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested }
+        return await db.query(query);
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested };
