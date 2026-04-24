@@ -1,0 +1,25 @@
+{
+    "name": "blood-bank-management-system",
+    "version": "1.0.0",
+    "description": "Blood Bank Management System with React frontend and Node.js backend",
+    "workspaces": [
+        "backend",
+        "frontend"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+        "build": "npm run build --workspace=frontend",
+        "start": "npm run start --workspace=backend"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "keywords": [
+        "blood-bank",
+        "react",
+        "node",
+        "mysql"
+    ],
+    "author": "",
+    "license": "ISC"
+}
