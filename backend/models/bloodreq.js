@@ -56,8 +56,33 @@ const getReqByHospital = async(data) => {
     }
 }
 
-export{
+
+const fulfillRequestm = async(data) => {
+    try {
+        const query = `UPDATE BloodRequest
+                        SET FulfillmentStatus = 'Fulfilled'
+                        WHERE RequestID = @requestid`;
+        const query2 = `UPDATE BloodUnit SET Status = 'Used' WHERE UnitID = @unitid`;
+        const request = new sql.Request()
+        request.input('requestid', sql.INT, data.requestid);
+        const request2 = new sql.Request()
+        request2.input('unitid', sql.INT, data.unitid);
+
+        
+        await request2.query(query2)
+        await request.query(query);
+        
+    }
+    catch(error)
+    {
+        throw error;
+    }
+}
+
+export {
     getBloodUnit,
     newBloodRequest,
-    getReqByHospital
-}
+    getReqByHospital,
+    fulfillRequestm
+};
+

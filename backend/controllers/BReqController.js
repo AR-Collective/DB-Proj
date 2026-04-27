@@ -51,7 +51,7 @@ const getRequestsByHospital = async (req,res)=> {
         const {hospitalid} = req.body
 
         if (!hospitalid)
-    {
+        {
             return res.status(400).json({message: "Hospital ID is missing"});
         }
         const result = await getReqByHospital({hospitalid:hospitalid});
@@ -68,6 +68,28 @@ const getRequestsByHospital = async (req,res)=> {
             error: error.message
         });
     }
+}
+
+const fulfillRequest = async(req,res)=> {
+    try {
+        const {requestid} = req.body
+
+        if (!requestid)
+        {
+            return res.status(400).json({message:"Request ID is missing"});
+        }
+        const result = await fulfillRequest({requestid:requestid});
+        res.status(200).json({
+            message: "Fulfilled Blood Request",
+            data:result.recordset
+        })
+    }
+    catch(error)
+    {
+        console.error("Fulfillment request error")
+
+    }
+
 }
 
 
