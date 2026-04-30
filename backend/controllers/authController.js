@@ -1,82 +1,110 @@
-import { registerUserModel, loginUserModel } from '../models/auth.js'
+import { registerUserModel, loginUserModel, getUserRoles } from '../models/auth.js';
 import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
-import { getNextSerial } from "../models/misc.js"
-
 const baseRegister = async (req, res, role) => {
-	try {
-		const { email, password, username } = req.body;
+    try {
+        const { email, password, firstName, lastName, contact, gender } = req.body;
 
-		if (!email || !password || !username) {
-			return res.status(400).json({ message: "Missing email or password or username" });
-		}
+        if (!email || !password || !firstName || !lastName || !contact) {
+            return res.status(400).json({ message: 'Missing required registration fields.' });
+        }
 
-		const userid = await getNextSerial(role);
-		const hashedPassword = await hashPassword(password);
+        const hashedPassword = await hashPassword(password);
 
-		const data = {
-			username,
-			userid,
-			email,
-			password: hashedPassword,
-			role
-		};
+        const data = {
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            contact,
+            gender,
+            role,
+            lastLogin: new Date(),
+            status: 'Active'
+        };
 
-		const token = await registerUser(data);
+        const { userId, existingUser } = await registerUserModel(data);
+        const roles = await getUserRoles(userId);
+        const user = {
+            userid: userId,
+            email,
+            firstName: existingUser?.FirstName || firstName,
+            lastName: existingUser?.LastName || lastName,
+            contact: existingUser?.Contact || contact,
+            gender: existingUser?.Gender || gender,
+            role: data.role, // Use the role they just registered for
+            roles
+        };
 
-		res.cookie("auth_token", token, { httpOnly: true, secure: true });
-		return res.status(201).json({ message: "Logged in", userid });
-	} catch (error) {
-		console.error(`${role} Registration Error:`, error);
-		if (error.number == 2627 && error.message.includes('UQ_User_Role_Email')) {
-			return res.status(409).json({
-				message: "A user with this email and role already exists."
-			});
-		}
-		return res.status(500).json({
-			message: "Registration failed due to an internal server error.",
-			error: error.message
-		});
-	}
+        const token = generateToken(user);
+
+        res.cookie('auth_token', token, { httpOnly: true, secure: true });
+        return res.status(201).json({ message: 'Registered', token, user });
+    } catch (error) {
+        console.error(`${role} Registration Error:`, error);
+        if (error.code === 'ROLE_EXISTS') {
+            return res.status(409).json({
+                message: 'A user with this email and role already exists.'
+            });
+        }
+        return res.status(500).json({
+            message: 'Registration failed due to an internal server error.',
+            error: error.message
+        });
+    }
 };
 
-export const registerDonor = (req, res) => baseRegister(req, res, "Donor");
-export const registerStaff = (req, res) => baseRegister(req, res, "Staff");
-export const registerPatient = (req, res) => baseRegister(req, res, "Patient");
+export const registerDonor = (req, res) => baseRegister(req, res, 'Donor');
+export const registerStaff = (req, res) => baseRegister(req, res, 'Staff');
+export const registerPatient = (req, res) => baseRegister(req, res, 'Patient');
+export const registerAdmin = (req, res) => baseRegister(req, res, 'Admin');
 
 export const registerUser = async (data) => {
-	await registerUserModel(data)
-	const token = generateToken(data)
-	return token
-}
+    await registerUserModel(data);
+};
 
 export const loginUser = async (req, res) => {
-	const cookie = req.cookies.auth_token
-	if (cookie) {
-		if (jwt.verify(cookie, process.env.JWT_SECRET)) {
-			res.status(201).json({
-				message: "Auth Successful",
-			})
-		}
-		return
-	}
-	const { username, password } = req.body
-	const record = await loginUserModel(username) //returns record if exist
-	const isPasswordCorrect = await verifyPassword(record.Password, password)
-	if (isPasswordCorrect) {
-		const user = {
-			id: record.Userid,
-			email: record.email
-		}
-		const token = generateToken(user)
-		res.cookie("auth_token", token, { httpOnly: true, secure: true })
-		res.json({
-			message: "Auth Successful"
-		})
-	}
-	else {
-		res.status(400).json({ message: "Invalid Password" })
-	}
-}
+    const cookie = req.cookies.auth_token;
+    if (cookie) {
+        try {
+            if (jwt.verify(cookie, process.env.JWT_SECRET)) {
+                return res.status(200).json({ message: 'Auth Successful' });
+            }
+        } catch (err) {
+            // continue to email/password login if cookie is invalid
+        }
+    }
+
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Missing email or password.' });
+    }
+
+    const record = await loginUserModel(email);
+    if (!record) {
+        return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isPasswordCorrect = await verifyPassword(record.Password, password);
+    if (!isPasswordCorrect) {
+        return res.status(400).json({ message: 'Invalid Password' });
+    }
+
+    const roles = await getUserRoles(record.UserID);
+    const user = {
+        userid: record.UserID,
+        email: record.Email,
+        firstName: record.FirstName,
+        lastName: record.LastName,
+        contact: record.Contact,
+        gender: record.Gender,
+        role: roles[0],
+        roles
+    };
+
+    const token = generateToken(user);
+    res.cookie('auth_token', token, { httpOnly: true, secure: true });
+    return res.json({ message: 'Auth Successful', token, user });
+};

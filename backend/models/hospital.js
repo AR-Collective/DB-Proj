@@ -1,4 +1,4 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const getHospitalVsAvailableStock = async () => {
     try {
@@ -12,13 +12,12 @@ const getHospitalVsAvailableStock = async () => {
             LEFT JOIN BloodUnit bu ON b.BloodGroupID = bu.BloodGroupID AND bu.Status = 'Available'
             GROUP BY h.HospitalID, h.Name, h.Location, b.BloodType, b.BloodGroupID
             ORDER BY h.HospitalID, b.BloodType
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
-    } catch (err) {
-        throw err
-    }
-}
+        `;
 
-export { getHospitalVsAvailableStock }
+        return await db.query(query);
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { getHospitalVsAvailableStock };

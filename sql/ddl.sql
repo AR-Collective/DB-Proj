@@ -3,10 +3,22 @@ USE defaultdb;
 
 -- UserAccount table
 CREATE TABLE UserAccount (
-    UserID VARCHAR(10) PRIMARY KEY,
-    Username VARCHAR(50) NOT NULL,
-    Email VARCHAR(255) NOT NULL,
+    UserID INT AUTO_INCREMENT PRIMARY KEY,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Email VARCHAR(255) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
+    Contact VARCHAR(20) NOT NULL,
+    Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
+    LastLogin DATETIME,
+    Status VARCHAR(10) NOT NULL CHECK (
+        Status IN ('Active', 'Inactive')
+    )
+);
+
+-- UserRole table
+CREATE TABLE UserRole (
+    UserID INT NOT NULL,
     Role VARCHAR(10) NOT NULL CHECK (
         Role IN (
             'Admin',
@@ -15,30 +27,8 @@ CREATE TABLE UserAccount (
             'Patient'
         )
     ),
-    LastLogin DATETIME,
-    Status VARCHAR(10) NOT NULL CHECK (
-        Status IN ('Active', 'Inactive')
-    ),
-    CONSTRAINT chk_ID_rolematch CHECK (
-        (
-            UserID REGEXP '^D[0-9]+'
-            AND Role = 'Donor'
-        )
-        OR (
-            UserID REGEXP '^S[0-9]+'
-            AND Role = 'Staff'
-        )
-        OR (
-            UserID REGEXP '^A[0-9]+'
-            AND Role = 'Admin'
-        )
-        OR (
-            UserID REGEXP '^P[0-9]+'
-            AND Role = 'Patient'
-        )
-    ),
-    CONSTRAINT UQ_User_Role_Username UNIQUE (Role, Username),
-    CONSTRAINT UQ_User_Role_Email UNIQUE (Role, Email)
+    PRIMARY KEY (UserID, Role),
+    CONSTRAINT FK_UserRole_User FOREIGN KEY (UserID) REFERENCES UserAccount (UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- BloodGroup table
@@ -53,14 +43,11 @@ CREATE TABLE BloodGroup (
 
 -- Donor table
 CREATE TABLE Donor (
-    DonorID VARCHAR(10) PRIMARY KEY,
-    Name VARCHAR(20) NOT NULL,
-    Contact VARCHAR(20) NOT NULL,
+    DonorID INT PRIMARY KEY,
     Age INT NOT NULL CHECK (
         Age >= 16
         AND Age < 80
     ),
-    Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
     BloodGroupID INT NOT NULL,
     Rating INT CHECK (Rating BETWEEN 1 AND 5),
     CONSTRAINT FK_Donor_User FOREIGN KEY (DonorID) REFERENCES UserAccount (UserID) ON DELETE CASCADE ON UPDATE CASCADE
@@ -87,10 +74,8 @@ CREATE TABLE Hospital (
 
 -- Patient table
 CREATE TABLE Patient (
-    PatientID VARCHAR(10) PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL,
+    PatientID INT PRIMARY KEY,
     Age INT CHECK (Age >= 0),
-    Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
     HospitalID INT NOT NULL,
     BloodGroupID INT NOT NULL,
     Disease VARCHAR(100),
@@ -111,10 +96,8 @@ CREATE TABLE StorageLocation (
 
 -- Staff table
 CREATE TABLE Staff (
-    StaffID VARCHAR(10) PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL,
-    Role VARCHAR(30) NOT NULL,
-    Contact VARCHAR(20) NOT NULL,
+    StaffID INT PRIMARY KEY,
+    Position VARCHAR(30) NOT NULL,
     ShiftTiming VARCHAR(30),
     AssignedLocationID INT,
     CONSTRAINT FK_Staff_User FOREIGN KEY (StaffID) REFERENCES UserAccount (UserID) ON DELETE CASCADE ON UPDATE CASCADE
@@ -123,16 +106,16 @@ CREATE TABLE Staff (
 -- Donation table
 CREATE TABLE Donation (
     DonationID INT AUTO_INCREMENT PRIMARY KEY,
-    DonorID VARCHAR(10) NOT NULL,
+    DonorID INT NOT NULL,
     DonationDate DATE DEFAULT(CURRENT_DATE) NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
-    StaffID VARCHAR(10) NOT NULL
+    StaffID INT NOT NULL
 );
 
 -- TestResult table
 CREATE TABLE TestResult (
     TestID INT AUTO_INCREMENT PRIMARY KEY,
-    PatientID VARCHAR(10),
+    PatientID INT,
     DonationID INT NOT NULL,
     ScreeningStatus VARCHAR(4) NOT NULL CHECK (
         ScreeningStatus IN ('Pass', 'Fail')
@@ -163,7 +146,7 @@ CREATE TABLE BloodUnit (
 -- BloodRequest table
 CREATE TABLE BloodRequest (
     RequestID INT AUTO_INCREMENT PRIMARY KEY,
-    PatientID VARCHAR(10) NOT NULL,
+    PatientID INT NOT NULL,
     HospitalID INT NOT NULL,
     BloodGroupID INT NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),

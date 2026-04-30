@@ -1,0 +1,240 @@
+.inventory-container {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.inventory-container h1 {
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.inventory-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e1e5e9;
+    text-align: center;
+}
+
+.summary-card h3 {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.summary-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-value.critical {
+    color: #dc3545;
+}
+
+.inventory-table {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+    border: 1px solid #e1e5e9;
+}
+
+.inventory-table h2 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.inventory-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.inventory-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #555;
+}
+
+.inventory-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.blood-type {
+    font-weight: bold;
+    color: #333;
+}
+
+.units {
+    font-weight: 600;
+    color: #667eea;
+}
+
+.status {
+    font-weight: 500;
+}
+
+.status-good {
+    color: #28a745;
+}
+
+.status-warning {
+    color: #ffc107;
+}
+
+.status-critical {
+    color: #dc3545;
+}
+
+.inventory-chart {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e1e5e9;
+}
+
+.inventory-chart h2 {
+    color: #333;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chart-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.bar-label {
+    min-width: 60px;
+    font-weight: 600;
+    color: #555;
+    text-align: right;
+}
+
+.bar-container {
+    flex: 1;
+    height: 30px;
+    background-color: #e1e5e9;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    transition: width 0.3s ease;
+}
+
+.bar-good {
+    background: linear-gradient(90deg, #28a745, #20c997);
+}
+
+.bar-warning {
+    background: linear-gradient(90deg, #ffc107, #fd7e14);
+}
+
+.bar-critical {
+    background: linear-gradient(90deg, #dc3545, #e83e8c);
+}
+
+.bar-value {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.error-message {
+    background-color: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #fcc;
+    text-align: center;
+    font-weight: 500;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .inventory-container {
+        padding: 20px;
+    }
+
+    .inventory-summary {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .summary-card {
+        padding: 20px;
+    }
+
+    .summary-value {
+        font-size: 2rem;
+    }
+
+    .inventory-table,
+    .inventory-chart {
+        padding: 20px;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .chart-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .bar-label {
+        min-width: auto;
+        text-align: left;
+    }
+}
