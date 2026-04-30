@@ -3,8 +3,9 @@ import db from '../config/db.js';
 const searchDonorByBloodType = async (bloodType) => {
     try {
         const query = `
-            SELECT d.DonorID, d.Name, d.Contact, d.Age, d.Gender, b.BloodType, d.Rating
+            SELECT d.DonorID, u.FirstName, u.LastName, u.Contact, u.Gender, d.Age, b.BloodType, d.Rating
             FROM Donor d
+            JOIN UserAccount u ON d.DonorID = u.UserID
             JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
             WHERE b.BloodType = @bloodtype
         `;
@@ -18,10 +19,11 @@ const searchDonorByBloodType = async (bloodType) => {
 const getDonorHistory = async (donorId) => {
     try {
         const query = `
-            SELECT d.DonationID, d.DonorID, d.DonationDate, d.Quantity, d.StaffID, 
-                   donor.Name, donor.Contact, b.BloodType
+            SELECT d.DonationID, d.DonorID, d.DonationDate, d.Quantity, d.StaffID,
+                   u.FirstName AS DonorFirstName, u.LastName AS DonorLastName, u.Contact, b.BloodType
             FROM Donation d
             JOIN Donor donor ON d.DonorID = donor.DonorID
+            JOIN UserAccount u ON donor.DonorID = u.UserID
             JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
             WHERE d.DonorID = @donorid
             ORDER BY d.DonationDate DESC
@@ -50,11 +52,12 @@ const updateDonorRating = async (donorId, rating) => {
 const getAverageDonationsPerDonor = async () => {
     try {
         const query = `
-            SELECT d.DonorID, d.Name, d.Contact, COUNT(dn.DonationID) as TotalDonations,
+            SELECT d.DonorID, u.FirstName, u.LastName, u.Contact, COUNT(dn.DonationID) as TotalDonations,
                    AVG(dn.Quantity) as AverageDonationQuantity
             FROM Donor d
+            JOIN UserAccount u ON d.DonorID = u.UserID
             LEFT JOIN Donation dn ON d.DonorID = dn.DonorID
-            GROUP BY d.DonorID, d.Name, d.Contact
+            GROUP BY d.DonorID, u.FirstName, u.LastName, u.Contact
             ORDER BY TotalDonations DESC
         `;
 
@@ -67,8 +70,9 @@ const getAverageDonationsPerDonor = async () => {
 const getDonorsNeverTested = async () => {
     try {
         const query = `
-            SELECT d.DonorID, d.Name, d.Contact, d.Age, b.BloodType
+            SELECT d.DonorID, u.FirstName, u.LastName, u.Contact, d.Age, b.BloodType
             FROM Donor d
+            JOIN UserAccount u ON d.DonorID = u.UserID
             JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
             WHERE d.DonorID NOT IN (
                 SELECT DISTINCT donor.DonorID
@@ -77,7 +81,7 @@ const getDonorsNeverTested = async () => {
                 INNER JOIN TestResult tr ON dn.DonationID = tr.DonationID
                 WHERE tr.ScreeningStatus = 'Pass'
             )
-            ORDER BY d.Name ASC
+            ORDER BY u.FirstName ASC, u.LastName ASC
         `;
 
         return await db.query(query);
