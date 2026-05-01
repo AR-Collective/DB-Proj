@@ -160,33 +160,38 @@ CREATE TABLE BloodRequest (
 
 -- Foreign key constraints
 ALTER TABLE Donor
-    ADD CONSTRAINT FK_Donor_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID);
+ADD CONSTRAINT FK_Donor_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID);
 
 ALTER TABLE Staff
-    ADD CONSTRAINT FK_Staff_StorageLocation FOREIGN KEY (AssignedLocationID) REFERENCES StorageLocation (LocationID) ON DELETE SET NULL;
+ADD CONSTRAINT FK_Staff_StorageLocation FOREIGN KEY (AssignedLocationID) REFERENCES StorageLocation (LocationID) ON DELETE SET NULL;
 
 ALTER TABLE Donation
-    ADD CONSTRAINT FK_Donation_Donor FOREIGN KEY (DonorID) REFERENCES Donor (DonorID),
-    ADD CONSTRAINT FK_Donation_Staff FOREIGN KEY (StaffID) REFERENCES Staff (StaffID);
+ADD CONSTRAINT FK_Donation_Donor FOREIGN KEY (DonorID) REFERENCES Donor (DonorID),
+ADD CONSTRAINT FK_Donation_Staff FOREIGN KEY (StaffID) REFERENCES Staff (StaffID);
 
 ALTER TABLE TestResult
-    ADD CONSTRAINT FK_TestResult_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE,
-    ADD CONSTRAINT FK_TestResult_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID);
+ADD CONSTRAINT FK_TestResult_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE,
+ADD CONSTRAINT FK_TestResult_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID);
 
 ALTER TABLE BloodUnit
-    ADD CONSTRAINT FK_BloodUnit_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
-    ADD CONSTRAINT FK_BloodUnit_StorageLocation FOREIGN KEY (LocationID) REFERENCES StorageLocation (LocationID),
-    ADD CONSTRAINT FK_BloodUnit_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE;
+ADD CONSTRAINT FK_BloodUnit_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
+ADD CONSTRAINT FK_BloodUnit_StorageLocation FOREIGN KEY (LocationID) REFERENCES StorageLocation (LocationID),
+ADD CONSTRAINT FK_BloodUnit_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE;
 
 ALTER TABLE BloodRequest
-    ADD CONSTRAINT FK_BloodRequest_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital (HospitalID),
-    ADD CONSTRAINT FK_BloodRequest_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
-    ADD CONSTRAINT FK_BloodRequest_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID) ON DELETE CASCADE;
-
-
-
-ALTER TABLE BloodUnit DROP CONSTRAINT IF EXISTS bloodunit_status_check;
+ADD CONSTRAINT FK_BloodRequest_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital (HospitalID),
+ADD CONSTRAINT FK_BloodRequest_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
+ADD CONSTRAINT FK_BloodRequest_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID) ON DELETE CASCADE;
 
 ALTER TABLE BloodUnit
-ADD CONSTRAINT bloodunit_status_check
-CHECK (Status IN ('Available', 'Reserved', 'Expired', 'Used'));
+DROP CONSTRAINT IF EXISTS bloodunit_status_check;
+
+ALTER TABLE BloodUnit
+ADD CONSTRAINT bloodunit_status_check CHECK (
+    Status IN (
+        'Available',
+        'Reserved',
+        'Expired',
+        'Used'
+    )
+);
