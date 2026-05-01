@@ -182,3 +182,11 @@ ALTER TABLE BloodRequest
     ADD CONSTRAINT FK_BloodRequest_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital (HospitalID),
     ADD CONSTRAINT FK_BloodRequest_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
     ADD CONSTRAINT FK_BloodRequest_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID) ON DELETE CASCADE;
+
+
+
+ALTER TABLE BloodUnit DROP CONSTRAINT IF EXISTS bloodunit_status_check;
+
+ALTER TABLE BloodUnit
+ADD CONSTRAINT bloodunit_status_check
+CHECK (Status IN ('Available', 'Reserved', 'Expired', 'Used'));

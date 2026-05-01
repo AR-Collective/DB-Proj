@@ -1,17 +1,24 @@
 import db from '../config/db.js';
+import {sql} from 'drizzle-orm';
+
 
 const newBloodRequest = async (data) => {
     try {
-        const query = `INSERT INTO BloodRequest(PatientID, HospitalID, BloodGroupID, Quantity, PatientDisease, FulfillmentStatus)
-                        VALUES (@patientid, @hospitalid, @bloodgroupid, @quantity, @patientdisease, 'Pending')`;
-
-        return await db.query(query, {
-            patientid: data.patientid,
-            hospitalid: data.hospitalid,
-            bloodgroupid: data.bloodgroupid,
-            quantity: data.quantity,
-            patientdisease: data.patientdisease,
+        const result = await db.transaction(async(tx)=>{
+            const res = await tx.execute(sql`
+                    CALL sp_create_blood_request(
+                    ${data.patientid},
+                    ${data.hospitalid},
+                    ${data.bloodgroupid},
+                    ${data.quantity},
+                    ${data.patientdisease}
+                )`
+            );
+            //return res[0];
+            
         });
+        //return result;
+        return {success:true};
     } catch (err) {
         throw err;
     }
