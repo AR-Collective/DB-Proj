@@ -21,7 +21,7 @@ const baseRegister = async (req, res, role) => {
             contact,
             gender,
             role,
-            lastLogin: new Date(),
+            lastLogin: new Date().toISOString(),
             status: 'Active'
         };
 
