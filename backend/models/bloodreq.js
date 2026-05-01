@@ -26,13 +26,12 @@ const newBloodRequest = async (data) => {
 
 const getBloodUnit = async (data) => {
     try {
-        const query = `SELECT * FROM BloodUnit BU
-                        WHERE BU.BloodGroupID = (
-                            SELECT BloodGroupID FROM BloodRequest
-                            WHERE RequestID = @requestid
-                        );`;
+       const result = await db.execute(
+            sql`SELECT * FROM fn_get_matching_units(${data.requestid})`
+        );
+        
+        return result;
 
-        return await db.query(query, { requestid: data.requestid });
     } catch (err) {
         throw err;
     }
@@ -40,10 +39,11 @@ const getBloodUnit = async (data) => {
 
 const getReqByHospital = async (data) => {
     try {
-        const query = `SELECT * FROM BloodRequest
-                        WHERE HospitalID = @hospitalid;`;
+        const query = await db.execute(
+            sql`SELECT * FROM fn_get_requests_by_hospital(${data.hospitalid})`
+        );
 
-        return await db.query(query, { hospitalid: data.hospitalid });
+        return query;
     } catch (err) {
         throw err;
     }
@@ -53,4 +53,5 @@ export {
     getBloodUnit,
     newBloodRequest,
     getReqByHospital,
+
 };
