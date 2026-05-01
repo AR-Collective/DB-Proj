@@ -67,14 +67,3 @@ export const registerUserModel = async (data) => {
     }
 };
 
-export const loginUserModel = async (email) => {
-    try {
-        const result = await db.execute(
-            sql`SELECT * FROM UserAccount WHERE Email = ${email}`
-        );
-        return result.recordset[0];
-    } catch (err) {
-        throw err;
-    }
-};
-
