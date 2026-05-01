@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
-import Register from './components/RegisterNew';
+import RegisterNew from './components/RegisterNew';
 import Dashboard from './components/Dashboard';
 import BloodRequests from './components/BloodRequests';
 import Donors from './components/Donors';
@@ -46,7 +46,7 @@ function App() {
             } />
             <Route path="/register" element={
               <PublicRoute>
-                <Register />
+                <RegisterNew />
               </PublicRoute>
             } />
             <Route path="/dashboard" element={

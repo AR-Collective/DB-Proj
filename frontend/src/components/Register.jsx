@@ -6,6 +6,7 @@ import './Auth.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
+        username: '',
         password: '',
         role: 'donor', // donor, patient, staff
         // Additional fields based on role
@@ -13,7 +14,6 @@ const Register = () => {
         lastName: '',
         email: '',
         phone: '',
-        gender: '',
         address: '',
         dateOfBirth: '',
         bloodType: '',
@@ -42,36 +42,36 @@ const Register = () => {
             let response;
             if (formData.role === 'donor') {
                 response = await authAPI.registerDonor({
+                    username: formData.username,
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    contact: formData.phone,
-                    gender: formData.gender,
+                    phone: formData.phone,
                     address: formData.address,
                     dateOfBirth: formData.dateOfBirth,
                     bloodType: formData.bloodType,
                 });
             } else if (formData.role === 'patient') {
                 response = await authAPI.registerPatient({
+                    username: formData.username,
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    contact: formData.phone,
-                    gender: formData.gender,
+                    phone: formData.phone,
                     address: formData.address,
                     dateOfBirth: formData.dateOfBirth,
                     bloodType: formData.bloodType,
                 });
             } else if (formData.role === 'staff') {
                 response = await authAPI.registerStaff({
+                    username: formData.username,
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    contact: formData.phone,
-                    gender: formData.gender,
+                    phone: formData.phone,
                     address: formData.address,
                     position: formData.position,
                     department: formData.department,
@@ -110,6 +110,18 @@ const Register = () => {
                     </div>
 
                     <div className="form-group">
+                        <label htmlFor="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
                         <label htmlFor="password">Password</label>
                         <input
                             type="password"
@@ -144,21 +156,6 @@ const Register = () => {
                                 required
                             />
                         </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="gender">Gender</label>
-                        <select
-                            id="gender"
-                            name="gender"
-                            value={formData.gender}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">Select Gender</option>
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
-                        </select>
                     </div>
 
                     <div className="form-group">

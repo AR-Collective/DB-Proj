@@ -28,18 +28,34 @@ const stepCheckEmail = async (req, res) => {
 // Step 2: Complete registration with remaining details
 const stepCompleteRegistration = async (req, res) => {
     try {
-        const { email, selectedRole, firstName, lastName, contact, gender, password } = req.body;
+        const { email, selectedRole, firstName, lastName, contact, gender, password, bloodGroup, medicalHistory } = req.body;
+        
+        console.log('Step 3 endpoint called with:', { email, selectedRole, firstName, lastName, contact, gender, bloodGroup, medicalHistory });
 
-        if (!email || !selectedRole || !firstName || !lastName || !contact || !gender || !password) {
-            return res.status(400).json({ message: 'All fields are required' });
+        // Validate required fields
+        if (!email || !selectedRole) {
+            return res.status(400).json({ message: 'Email and role are required' });
         }
 
-        const result = await completeRegistration(email, selectedRole, firstName, lastName, contact, gender, password);
+        // For new users, validate all fields. Existing users might not provide them.
+        if (!firstName && !lastName && !contact && !gender && !password) {
+            return res.status(400).json({ message: 'Missing registration details' });
+        }
 
-        if (!result.success) {
+        const result = await completeRegistration(email, selectedRole, firstName || '', lastName || '', contact || '', gender || '', password || '', bloodGroup, medicalHistory);
+        
+        console.log('Registration result:', result);
+
+        if (result && result.success === false) {
             return res.status(409).json({
                 message: result.message,
                 data: result
+            });
+        }
+        
+        if (!result) {
+            return res.status(500).json({
+                message: 'No result from registration'
             });
         }
 
@@ -47,10 +63,10 @@ const stepCompleteRegistration = async (req, res) => {
         const user = {
             userid: result.userid,
             email: result.email,
-            firstName,
-            lastName,
-            contact,
-            gender,
+            firstName: firstName || '',
+            lastName: lastName || '',
+            contact: contact || '',
+            gender: gender || '',
             role: selectedRole
         };
 

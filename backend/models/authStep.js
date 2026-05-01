@@ -26,9 +26,11 @@ const checkEmailAndGetRoles = async (email) => {
 };
 
 // Step 3: Complete registration with all details
-const completeRegistration = async (email, selectedRole, firstName, lastName, contact, gender, password) => {
+const completeRegistration = async (email, selectedRole, firstName, lastName, contact, gender, password, bloodGroup = null, medicalHistory = null) => {
     try {
+        console.log('Starting registration for:', email, selectedRole);
         const hashedPassword = await hashPassword(password);
+        console.log('Password hashed successfully');
         
         const result = await db.queryClient`
             SELECT * FROM fn_register_or_add_role(
@@ -42,12 +44,19 @@ const completeRegistration = async (email, selectedRole, firstName, lastName, co
             )
         `;
         
+        console.log('Function result:', result);
+        
         if (!result || result.length === 0) {
             throw new Error('Registration failed');
         }
         
+        // TODO: Store bloodGroup, medicalHistory in respective tables for Donor/Patient roles
+        // For now, the core registration is complete. Role-specific data can be added in separate tables.
+        
+        console.log('Returning:', result[0]);
         return result[0];
     } catch (err) {
+        console.log('Error in completeRegistration:', err.message);
         throw err;
     }
 };

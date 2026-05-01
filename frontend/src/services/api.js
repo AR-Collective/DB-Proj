@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000'; // Uses the proxy configured in vite.config.js
+const API_BASE_URL = '/api'; // Uses the proxy configured in vite.config.js
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,7 +23,6 @@ export const authAPI = {
   registerDonor: (data) => api.post('/auth/register/donor', data),
   registerPatient: (data) => api.post('/auth/register/patient', data),
   registerStaff: (data) => api.post('/auth/register/staff', data),
-  post: (endpoint, data) => api.post(endpoint, data),
 };
 
 export const bloodRequestAPI = {
