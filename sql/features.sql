@@ -494,3 +494,81 @@ BEGIN
     SELECT * FROM UserAccount WHERE email = p_email;
 END;
 $$;
+-- 26 get available roles for email (roles not yet registered)
+CREATE OR REPLACE FUNCTION fn_get_available_roles(p_email VARCHAR)
+RETURNS TABLE (
+    userid INT, existingroles TEXT[], availableroles TEXT[]
+) AS $$
+DECLARE
+    v_user_id INT;
+    v_existing_roles TEXT[];
+    v_available_roles TEXT[];
+BEGIN
+    -- Check if email exists
+    SELECT UserID INTO v_user_id FROM UserAccount WHERE email = p_email;
+    
+    IF v_user_id IS NULL THEN
+        -- Email doesn't exist, all roles available, return NULL for userid
+        RETURN QUERY SELECT NULL::INT, NULL::TEXT[], ARRAY['Donor', 'Patient', 'Staff']::TEXT[];
+    ELSE
+        -- Email exists, get existing roles
+        SELECT ARRAY_AGG(role ORDER BY role) INTO v_existing_roles 
+        FROM UserRole WHERE UserID = v_user_id;
+        
+        -- Calculate available roles (those not in existing roles)
+        v_available_roles := ARRAY(
+            SELECT role FROM (VALUES ('Donor'), ('Patient'), ('Staff')) AS t(role)
+            WHERE role NOT IN (SELECT UNNEST(COALESCE(v_existing_roles, ARRAY[]::TEXT[])))
+            ORDER BY role
+        );
+        
+        RETURN QUERY SELECT v_user_id, v_existing_roles, v_available_roles;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 27 register or add role to existing user
+CREATE OR REPLACE FUNCTION fn_register_or_add_role(
+    p_email VARCHAR,
+    p_role VARCHAR,
+    p_fname VARCHAR,
+    p_lname VARCHAR,
+    p_contact VARCHAR,
+    p_gender BPCHAR(1),
+    p_password VARCHAR
+)
+RETURNS TABLE (
+    userid INT, email VARCHAR, success BOOLEAN, message VARCHAR
+) AS $$
+DECLARE
+    v_user_id INT;
+    v_existing_roles TEXT[];
+    v_role_exists BOOLEAN;
+BEGIN
+    -- Check if email exists
+    SELECT UserID INTO v_user_id FROM UserAccount WHERE email = p_email;
+    
+    IF v_user_id IS NULL THEN
+        -- New user: create account and add role
+        INSERT INTO UserAccount (FirstName, LastName, Email, Password, Contact, Gender, LastLogin, Status)
+        VALUES (p_fname, p_lname, p_email, p_password, p_contact, p_gender, NOW(), 'Active')
+        RETURNING UserID INTO v_user_id;
+        
+        INSERT INTO UserRole (UserID, Role) VALUES (v_user_id, p_role);
+        
+        RETURN QUERY SELECT v_user_id, p_email, TRUE, 'User registered successfully';
+    ELSE
+        -- Existing user: check if role already exists
+        SELECT EXISTS(SELECT 1 FROM UserRole WHERE UserID = v_user_id AND Role = p_role)
+        INTO v_role_exists;
+        
+        IF v_role_exists THEN
+            RETURN QUERY SELECT v_user_id, p_email, FALSE, 'User already has this role';
+        ELSE
+            -- Add new role
+            INSERT INTO UserRole (UserID, Role) VALUES (v_user_id, p_role);
+            RETURN QUERY SELECT v_user_id, p_email, TRUE, 'Role added successfully';
+        END IF;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
