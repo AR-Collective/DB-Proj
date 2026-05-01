@@ -23,6 +23,7 @@ export const authAPI = {
   registerDonor: (data) => api.post('/auth/register/donor', data),
   registerPatient: (data) => api.post('/auth/register/patient', data),
   registerStaff: (data) => api.post('/auth/register/staff', data),
+  post: (endpoint, data) => api.post(endpoint, data),
 };
 
 export const bloodRequestAPI = {
