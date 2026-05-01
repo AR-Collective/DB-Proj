@@ -1,12 +1,12 @@
 import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 export const getUserByEmail = async (email) => {
     try {
-        const result = await db.query(
-            'SELECT * FROM UserAccount WHERE Email = @email',
-            { email }
+        const result = await db.execute(
+            sql`SELECT * FROM UserAccount WHERE Email = ${email}`
         );
-        return result.recordset[0];
+        return result[0];
     } catch (err) {
         throw err;
     }
@@ -14,11 +14,10 @@ export const getUserByEmail = async (email) => {
 
 export const getUserRoles = async (userId) => {
     try {
-        const result = await db.query(
-            'SELECT Role FROM UserRole WHERE UserID = @userid',
-            { userid: userId }
+        const result = await db.execute(
+            sql`SELECT Role FROM UserRole WHERE UserID = ${userId}`
         );
-        return result.recordset.map((row) => row.Role);
+        return result.map((row) => row.role);
     } catch (err) {
         throw err;
     }
@@ -30,42 +29,36 @@ export const registerUserModel = async (data) => {
         let userId;
 
         if (!existingUser) {
-            const query = `
-                INSERT INTO UserAccount (FirstName, LastName, Email, Password, Contact, Gender, LastLogin, Status)
-                OUTPUT INSERTED.UserID
-                VALUES (@firstName, @lastName, @email, @password, @contact, @gender, @lastLogin, @status)
-            `;
+            const result = await db.execute(sql`
+                INSERT INTO UserAccount (
+                    FirstName, LastName, Email, Password, 
+                    Contact, Gender, LastLogin, Status
+                )
+                VALUES (
+                    ${data.firstName}, ${data.lastName}, ${data.email}, ${data.password}, 
+                    ${data.contact}, ${data.gender || null}, ${data.lastLogin}, 'Active'
+                )
+                RETURNING UserID
+            `);
 
-            const result = await db.query(query, {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                password: data.password,
-                contact: data.contact,
-                gender: data.gender || null,
-                lastLogin: data.lastLogin,
-                status: 'Active'
-            });
 
-            userId = result.recordset[0].UserID;
+            userId = result[0].userid;
         } else {
-            userId = existingUser.UserID;
+            userId = existingUser.userid;
         }
 
-        const roleCheck = await db.query(
-            'SELECT 1 FROM UserRole WHERE UserID = @userid AND Role = @role',
-            { userid: userId, role: data.role }
+        const roleCheck = await db.execute(
+            sql`SELECT 1 FROM UserRole WHERE UserID = ${userId} AND Role = ${data.role}`
         );
 
-        if (roleCheck.recordset.length > 0) {
+        if (roleCheck.length > 0) {
             const error = new Error('A user with this email and role already exists.');
             error.code = 'ROLE_EXISTS';
             throw error;
         }
 
-        await db.query(
-            'INSERT INTO UserRole (UserID, Role) VALUES (@userid, @role)',
-            { userid: userId, role: data.role }
+        await db.execute(
+            sql`INSERT INTO UserRole (UserID, Role) VALUES (${userId}, ${data.role})`
         );
 
         return { userId, existingUser };
@@ -76,9 +69,8 @@ export const registerUserModel = async (data) => {
 
 export const loginUserModel = async (email) => {
     try {
-        const result = await db.query(
-            'SELECT * FROM UserAccount WHERE Email = @email',
-            { email }
+        const result = await db.execute(
+            sql`SELECT * FROM UserAccount WHERE Email = ${email}`
         );
         return result.recordset[0];
     } catch (err) {
