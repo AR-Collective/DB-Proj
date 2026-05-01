@@ -1,4 +1,4 @@
-import { newBloodRequest, getBloodUnit, getReqByHospital } from '../models/bloodreq.js'
+import { newBloodRequest, getBloodUnit, getReqByHospital, fulfillRequestm } from '../models/bloodreq.js'
 
 const insertBloodRequest = async (req,res) => {
     try{
@@ -78,7 +78,7 @@ const fulfillRequest = async (req, res) => {
             return res.status(400).json({ message: "Request ID or Unit ID is missing" });
         }
 
-        await fulfillRequestModel({ requestid, unitid });
+        await fulfillRequestm({ requestid, unitid });
         return res.status(200).json({
             message: "Fulfilled Blood Request",
             success:true
@@ -99,6 +99,6 @@ const fulfillRequest = async (req, res) => {
 export {
     insertBloodRequest,
     getBloodUnits,
-    getRequestsByHospital
+    getRequestsByHospital,
     fulfillRequest
 }
