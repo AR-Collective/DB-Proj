@@ -12,7 +12,7 @@ const getCompatibleBlood = async (req, res) => {
 
         res.status(200).json({
             message: "Compatible blood retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get compatible blood error: ", error)
@@ -35,7 +35,7 @@ const searchByDisease = async (req, res) => {
 
         res.status(200).json({
             message: "Patient search successful",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Search patient by disease error: ", error)

@@ -6,7 +6,7 @@ const getBloodInventory = async (req, res) => {
 
         res.status(200).json({
             message: "Blood inventory retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get inventory error: ", error)
@@ -29,7 +29,7 @@ const getExpiringUnits = async (req, res) => {
 
         res.status(200).json({
             message: "Expiring blood units retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get expiring units error: ", error)
@@ -46,7 +46,7 @@ const removeExpiredUnits = async (req, res) => {
 
         res.status(200).json({
             message: "Expired blood units removed successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Remove expired units error: ", error)
@@ -63,7 +63,7 @@ const getBloodDemand = async (req, res) => {
 
         res.status(200).json({
             message: "Blood demand by type retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get blood demand error: ", error)
@@ -80,7 +80,7 @@ const getAvailabilityReport = async (req, res) => {
 
         res.status(200).json({
             message: "Blood availability report retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get availability report error: ", error)

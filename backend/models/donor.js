@@ -1,98 +1,49 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const searchDonorByBloodType = async (bloodType) => {
     try {
-        const query = `
-            SELECT d.DonorID, d.Name, d.Contact, d.Age, d.Gender, b.BloodType, d.Rating
-            FROM Donor d
-            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
-            WHERE b.BloodType = @bloodtype
-        `
-        const request = new sql.Request()
-        request.input('bloodtype', sql.VarChar, bloodType)
-        
-        return await request.query(query)
+        const result = await db.queryClient`SELECT * FROM fn_search_donors_by_blood_type(${bloodType})`;
+        return result;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getDonorHistory = async (donorId) => {
     try {
-        const query = `
-            SELECT d.DonationID, d.DonorID, d.DonationDate, d.Quantity, d.StaffID, 
-                   donor.Name, donor.Contact, b.BloodType
-            FROM Donation d
-            JOIN Donor donor ON d.DonorID = donor.DonorID
-            JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
-            WHERE d.DonorID = @donorid
-            ORDER BY d.DonationDate DESC
-        `
-        const request = new sql.Request()
-        request.input('donorid', sql.VarChar, donorId)
-        
-        return await request.query(query)
+        const result = await db.queryClient`SELECT * FROM fn_get_donor_history(${donorId})`;
+        return result;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const updateDonorRating = async (donorId, rating) => {
     try {
-        const query = `
-            UPDATE Donor
-            SET Rating = @rating
-            WHERE DonorID = @donorid
-        `
-        const request = new sql.Request()
-        request.input('donorid', sql.VarChar, donorId)
-        request.input('rating', sql.INT, rating)
+        const result = await db.queryClient`SELECT * FROM fn_update_donor_rating(${donorId}, ${rating})`;
+        return result;
         
-        return await request.query(query)
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getAverageDonationsPerDonor = async () => {
     try {
-        const query = `
-            SELECT d.DonorID, d.Name, d.Contact, COUNT(dn.DonationID) as TotalDonations,
-                   AVG(dn.Quantity) as AverageDonationQuantity
-            FROM Donor d
-            LEFT JOIN Donation dn ON d.DonorID = dn.DonorID
-            GROUP BY d.DonorID, d.Name, d.Contact
-            ORDER BY TotalDonations DESC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        const result = await db.queryClient`SELECT * FROM vw_donor_donation_stats`;
+        return result;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getDonorsNeverTested = async () => {
     try {
-        const query = `
-            SELECT d.DonorID, d.Name, d.Contact, d.Age, b.BloodType
-            FROM Donor d
-            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
-            WHERE d.DonorID NOT IN (
-                SELECT DISTINCT donor.DonorID
-                FROM Donation dn
-                INNER JOIN Donor donor ON dn.DonorID = donor.DonorID
-                INNER JOIN TestResult tr ON dn.DonationID = tr.DonationID
-                WHERE tr.ScreeningStatus = 'Pass'
-            )
-            ORDER BY d.Name ASC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        const result = await db.queryClient`SELECT * FROM vw_unscreened_or_failed_donors`;
+        return result;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
-export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested }
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested };

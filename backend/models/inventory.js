@@ -1,100 +1,43 @@
-import sql from 'mssql'
+import db from '../config/db.js';
 
 const getInventoryByLocation = async () => {
     try {
-        const query = `
-            SELECT sl.LocationID, sl.LocationName, sl.Address, sl.Capacity,
-                   b.BloodType, SUM(bu.Quantity) as TotalUnits, COUNT(bu.UnitID) as NumberOfUnits
-            FROM StorageLocation sl
-            JOIN BloodUnit bu ON sl.LocationID = bu.LocationID
-            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
-            GROUP BY sl.LocationID, sl.LocationName, sl.Address, sl.Capacity, b.BloodType
-            ORDER BY sl.LocationName, b.BloodType
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        return await db.queryClient`SELECT * FROM vw_inventory_by_location`;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getExpiringUnits = async (days) => {
     try {
-        const query = `
-            SELECT bu.UnitID, b.BloodType, bu.ExpirationDate, sl.LocationName
-            FROM BloodUnit bu
-            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
-            JOIN StorageLocation sl ON bu.LocationID = sl.LocationID
-            WHERE DATEDIFF(day, GETDATE(), bu.ExpirationDate) <= @days
-            ORDER BY bu.ExpirationDate ASC
-        `
-        const request = new sql.Request()
-        request.input('days', sql.Int, days)
-        
-        return await request.query(query)
+        return await db.queryClient`SELECT * FROM fn_get_expiring_units(${days})`;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const removeExpiredUnits = async () => {
     try {
-        const query = `
-            DELETE FROM BloodUnit
-            WHERE ExpirationDate < GETDATE()
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        return await db.queryClient`CALL sp_purge_expired_units()`;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getBloodDemandByType = async () => {
     try {
-        const query = `
-            SELECT b.BloodType, COUNT(br.RequestID) as DemandCount
-            FROM BloodRequest br
-            JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
-            GROUP BY b.BloodType, b.BloodGroupID
-            HAVING COUNT(br.RequestID) > 0
-            ORDER BY DemandCount DESC
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        return await db.queryClient`SELECT * FROM vw_blood_demand_analytics`;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
 const getBloodAvailabilityReport = async () => {
     try {
-        const query = `
-            SELECT b.BloodType, SUM(bu.Quantity) as TotalQuantity, bu.Status
-            FROM BloodUnit bu
-            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
-            WHERE bu.Status = 'Available'
-            GROUP BY b.BloodType, bu.Status
-            
-            UNION
-            
-            SELECT b.BloodType, SUM(bu.Quantity) as TotalQuantity, bu.Status
-            FROM BloodUnit bu
-            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
-            WHERE bu.Status = 'Reserved'
-            GROUP BY b.BloodType, bu.Status
-            
-            ORDER BY BloodType, Status
-        `
-        const request = new sql.Request()
-        
-        return await request.query(query)
+        return await db.queryClient`SELECT * FROM vw_availability_report`;
     } catch (err) {
-        throw err
+        throw err;
     }
-}
+};
 
-export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType, getBloodAvailabilityReport }
+export { getInventoryByLocation, getExpiringUnits, removeExpiredUnits, getBloodDemandByType, getBloodAvailabilityReport };

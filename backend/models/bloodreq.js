@@ -1,63 +1,71 @@
-import sql from 'mssql'
+import db from '../config/db.js';
+import {sql} from 'drizzle-orm';
 
 
-const newBloodRequest = async(data) => {
-    try{
-        // const now = new Date()
-
-        const query =  `INSERT INTO BloodRequest(PatientID, HospitalID, BloodGroupID, Quantity, PatientDisease, FulfillmentStatus)
-                        VALUES (@patientid, @hospitalid, @bloodgroupid, @quantity, @patientdisease, 'Pending')`;
-        const request = new sql.Request();
-        request.input('patientid', sql.VarChar, data.patientid);
-        request.input('hospitalid', sql.INT, data.hospitalid);
-        request.input('bloodgroupid', sql.INT, data.bloodgroupid);
-        request.input('quantity', sql.INT, data.quantity);
-        request.input('patientdisease', sql.VarChar, data.patientdisease);
-        // request.input('requestdate', sql.DateTime, now);
-        //request.input('fulfillmentstatus', sql.VarChar, data.fulfillmentstatus);
-
-        return await request.query(query);
-    } catch(err) {
-        throw err
-    }
-}
-
-const getBloodUnit = async(data) => {
-    try{
-        const query =  `SELECT * FROM BloodUnit BU
-                        WHERE BU.BloodGroupID = (
-                            SELECT BloodGroupID FROM BloodRequest
-                            WHERE RequestID = @requestid
-                        );`;
-        // maybe add Status = 'Available' later
-        const request = new sql.Request();
-        request.input('requestid', sql.INT, data.requestid);
-
-        return await request.query(query);
-    }
-    catch(err){
+const newBloodRequest = async (data) => {
+    try {
+        const result = await db.transaction(async(tx)=>{
+            const res = await tx.execute(sql`
+                    CALL sp_create_blood_request(
+                    ${data.patientid},
+                    ${data.hospitalid},
+                    ${data.bloodgroupid},
+                    ${data.quantity},
+                    ${data.patientdisease}
+                )`
+            );
+            //return res[0];
+            
+        });
+        //return result;
+        return {success:true};
+    } catch (err) {
         throw err;
     }
-}
+};
 
-const getReqByHospital = async(data) => {
-    try{
-        const query =  `SELECT * FROM BloodRequest
-                        WHERE HospitalID = @hospitalid;`;
+const getBloodUnit = async (data) => {
+    try {
+       const result = await db.execute(
+            sql`SELECT * FROM fn_get_matching_units(${data.requestid})`
+        );
+        
+        return result;
 
-        const request = new sql.Request();
-        request.input('hospitalid',sql.INT, data.hospitalid);
-
-        return await request.query(query);
-    }
-    catch(err)
-    {
+    } catch (err) {
         throw err;
     }
-}
+};
 
-export{
+const getReqByHospital = async (data) => {
+    try {
+        const query = await db.execute(
+            sql`SELECT * FROM fn_get_requests_by_hospital(${data.hospitalid})`
+        );
+
+        return query;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const fulfillRequestm = async (data) => {
+    try {
+        await db.execute(sql`
+            CALL sp_fulfill_request(
+                ${data.requestid},
+                ${data.unitid}
+            )`);
+
+        return { success: true };
+    } catch (error) {
+        throw error;
+    }
+};
+
+export {
     getBloodUnit,
     newBloodRequest,
-    getReqByHospital
-}
+    getReqByHospital,
+    fulfillRequestm
+};

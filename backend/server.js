@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import cookies from "cookie-parser";
 import db from "./config/db.js";
+import loadSchema from "./scripts/loadSchema.js";
 import authRoutes from "./routes/authRoutes.js";
+import authStepRoutes from "./routes/authStepRoutes.js";
 import reqRoutes from "./routes/reqRoutes.js";
 import donorRoutes from "./routes/donorRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
@@ -15,8 +17,8 @@ const app = express()
 app.use(cors())
 app.use(cookies())
 app.use(express.json())
-await db.connect()
 app.use('/auth', authRoutes)
+app.use('/auth/step', authStepRoutes)
 app.use('/bloodrequest', reqRoutes)
 app.use('/donor', donorRoutes)
 app.use('/inventory', inventoryRoutes)
@@ -24,5 +26,15 @@ app.use('/hospital', hospitalRoutes)
 app.use('/patient', patientRoutes)
 app.use('/testing', testingRoutes)
 
+// Load database schema on startup
+async function startServer() {
+    try {
+        await loadSchema();
+        app.listen(3000, () => console.log("Backend running on port 3000"));
+    } catch (err) {
+        console.error('Failed to start server:', err.message);
+        process.exit(1);
+    }
+}
 
-app.listen(3000, () => console.log("Backend running on port 3000"))
+startServer();

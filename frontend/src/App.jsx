@@ -98,22 +98,3 @@ function App() {
 }
 
 export default App;
-=======
-    <>
-      <form action={sendD}>
-        <input name='username' onChange={e => setUsername(e.target.value)} />
-        <br />
-        <input
-          type="password"
-          name="password"
-          onChange={e => setPassword(e.target.value)}
-        />
-        <br />
-        <button type="submit">Submit</button>
-      </form>
-      <p>{username}</p>
-    </>
-  )
-}
-
->>>>>>> main

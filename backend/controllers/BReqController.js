@@ -1,4 +1,4 @@
-import { newBloodRequest, getBloodUnit, getReqByHospital } from '../models/bloodreq.js'
+import { newBloodRequest, getBloodUnit, getReqByHospital, fulfillRequestm } from '../models/bloodreq.js'
 
 const insertBloodRequest = async (req,res) => {
     try{
@@ -34,7 +34,7 @@ const getBloodUnits = async (req, res) => {
         const result = await getBloodUnit({requestid: breqid});
         res.status(200).json({
             message: "BloodUnit get is successful!",
-            data: result.recordset
+            data: result
         })
     }
     catch(error)
@@ -57,7 +57,7 @@ const getRequestsByHospital = async (req,res)=> {
         const result = await getReqByHospital({hospitalid:hospitalid});
         res.status(200).json({
             message: "BloodRequest get is successful",
-            data: result.recordset
+            data: result
         })
     }
     catch(error)
@@ -70,10 +70,35 @@ const getRequestsByHospital = async (req,res)=> {
     }
 }
 
+const fulfillRequest = async (req, res) => {
+    try {
+        const { requestid, unitid } = req.body;
+
+        if (!requestid || !unitid) {
+            return res.status(400).json({ message: "Request ID or Unit ID is missing" });
+        }
+
+        await fulfillRequestm({ requestid, unitid });
+        return res.status(200).json({
+            message: "Fulfilled Blood Request",
+            success:true
+        })
+    }
+    catch(error)
+    {
+        console.error("Fulfillment request error:",error)
+        return res.status(500).json({
+                    message: "Internal server error",
+                    error: error.message
+        });
+    }
+
+}
+
 
 export {
     insertBloodRequest,
     getBloodUnits,
-    getRequestsByHospital
-    //fulfillRequest
+    getRequestsByHospital,
+    fulfillRequest
 }

@@ -12,7 +12,7 @@ const searchDonors = async (req, res) => {
 
         res.status(200).json({
             message: "Donor search successful",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Donor search error: ", error)
@@ -35,7 +35,7 @@ const getDonations = async (req, res) => {
 
         res.status(200).json({
             message: "Donor history retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get donor history error: ", error)
@@ -78,7 +78,7 @@ const getAverageDonations = async (req, res) => {
 
         res.status(200).json({
             message: "Average donations per donor retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get average donations error: ", error)
@@ -95,7 +95,7 @@ const getNeverTested = async (req, res) => {
 
         res.status(200).json({
             message: "Donors never tested retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get donors never tested error: ", error)

@@ -6,7 +6,7 @@ const getTestResults = async (req, res) => {
 
         res.status(200).json({
             message: "Test results retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get test results error: ", error)

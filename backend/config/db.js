@@ -1,31 +1,32 @@
+// FOR PRODUCTION
+// import { drizzle } from 'drizzle-orm/postgres-js';
+// import dotenv from 'dotenv'
+//
+// dotenv.config({ path: '../../.env' })
+// const db = drizzle({
+// 	connection: {
+// 		url: process.env.DATABASE_URL,
+// 	}
+// });
+// export default db
+
+
+
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import dotenv from 'dotenv';
 
-dotenv.config({
-	path: '../.env'
-});
-import sql from "mssql"
+dotenv.config({ path: '../.env' });
 
-const config = {
-	user: process.env.DB_USERNAME,
-	password: process.env.DB_PASSWORD,
-	server: process.env.DB_SERVER,
-	database: process.env.DB_NAME,
-	port: parseInt(process.env.DB_PORT),
-	options: {
-		encrypt: false,
-		trustServerCertificate: true
-	}
-}
-const db = {
-	connect: async () => {
-		try {
-			await sql.connect(config)
-			console.log("Connected to SQL Server successfully!");
-		}
-		catch (err) {
-			console.error("Database connection failed:", err.message);
-			throw err; // Important: let the caller know it failed
-		}
-	}
-}
-export default db
+const globalForDb = globalThis;
+
+const queryClient = globalForDb.postgres || postgres(process.env.DATABASE_URL);
+
+if (process.env.NODE_ENV !== 'production') globalForDb.postgres = queryClient;
+
+const db = drizzle(queryClient);
+
+// Expose the raw postgres client on the db object
+db.queryClient = queryClient;
+
+export default db;
