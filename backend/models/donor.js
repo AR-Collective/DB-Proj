@@ -2,7 +2,7 @@ import db from '../config/db.js';
 
 const searchDonorByBloodType = async (bloodType) => {
     try {
-        const result = await db.query(`SELECT * FROM fn_search_donors_by_blood_type($1)`, [bloodType]);
+        const result = await db.queryClient`SELECT * FROM fn_search_donors_by_blood_type(${bloodType})`;
         return result;
     } catch (err) {
         throw err;
@@ -11,7 +11,7 @@ const searchDonorByBloodType = async (bloodType) => {
 
 const getDonorHistory = async (donorId) => {
     try {
-        const result = await db.query('SELECT * FROM fn_get_donor_history($1)', [donorId]);
+        const result = await db.queryClient`SELECT * FROM fn_get_donor_history(${donorId})`;
         return result;
     } catch (err) {
         throw err;
@@ -20,7 +20,7 @@ const getDonorHistory = async (donorId) => {
 
 const updateDonorRating = async (donorId, rating) => {
     try {
-        const result = await db.query('SELECT * FROM fn_update_donor_rating($1, $2)', [donorId, rating]);
+        const result = await db.queryClient`SELECT * FROM fn_update_donor_rating(${donorId}, ${rating})`;
         return result;
         
     } catch (err) {
@@ -30,7 +30,7 @@ const updateDonorRating = async (donorId, rating) => {
 
 const getAverageDonationsPerDonor = async () => {
     try {
-        const result = await db.query('SELECT * FROM vw_donor_donation_stats');
+        const result = await db.queryClient`SELECT * FROM vw_donor_donation_stats`;
         return result;
     } catch (err) {
         throw err;
@@ -39,7 +39,7 @@ const getAverageDonationsPerDonor = async () => {
 
 const getDonorsNeverTested = async () => {
     try {
-        const result = await db.query('SELECT * FROM vw_unscreened_or_failed_donors');
+        const result = await db.queryClient`SELECT * FROM vw_unscreened_or_failed_donors`;
         return result;
     } catch (err) {
         throw err;
