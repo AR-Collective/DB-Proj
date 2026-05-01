@@ -24,8 +24,9 @@ const queryClient = globalForDb.postgres || postgres(process.env.DATABASE_URL);
 
 if (process.env.NODE_ENV !== 'production') globalForDb.postgres = queryClient;
 
-
 const db = drizzle(queryClient);
 
+// Expose the raw postgres client on the db object
+db.queryClient = queryClient;
 
 export default db;
