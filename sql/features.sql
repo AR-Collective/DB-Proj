@@ -201,11 +201,18 @@ CREATE OR REPLACE PROCEDURE sp_update_donor_rating(
 )
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM Donor WHERE DonorID = p_donor_id
+    ) THEN
+        RAISE EXCEPTION 'DonorID % does not exist', p_donor_id;
+    END IF;
+
     UPDATE Donor
     SET Rating = p_rating
     WHERE DonorID = p_donor_id;
 END;
 $$;
+
 
 -- 15. delete all expired blood units
 CREATE OR REPLACE PROCEDURE sp_purge_expired_units()
@@ -224,13 +231,29 @@ CREATE OR REPLACE PROCEDURE sp_fulfill_request(
 )
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM BloodRequest WHERE RequestID = p_request_id
+    )
+	THEN
+        RAISE EXCEPTION 'RequestID % does not exist', p_request_id;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM BloodUnit WHERE UnitID = p_unit_id
+    )
+	THEN
+        RAISE EXCEPTION 'UnitID % does not exist', p_unit_id;
+    END IF;
+
+
     UPDATE BloodRequest
     SET FulfillmentStatus = 'Fulfilled'
     WHERE RequestID = p_request_id;
-    
+
     UPDATE BloodUnit
     SET Status = 'Used'
     WHERE UnitID = p_unit_id;
+
 END;
 $$;
 
