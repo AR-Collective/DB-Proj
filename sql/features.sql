@@ -369,3 +369,4 @@ BEGIN
     ORDER BY ua.LastName, ua.FirstName ASC;
 END;
 $$ LANGUAGE plpgsql;
+
