@@ -20,16 +20,7 @@ const getInventoryByLocation = async () => {
 
 const getExpiringUnits = async (days) => {
     try {
-        const query = `
-            SELECT bu.UnitID, b.BloodType, bu.ExpirationDate, sl.LocationName
-            FROM BloodUnit bu
-            JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
-            JOIN StorageLocation sl ON bu.LocationID = sl.LocationID
-            WHERE DATEDIFF(bu.ExpirationDate, CURDATE()) <= @days
-            ORDER BY bu.ExpirationDate ASC
-        `;
-
-        return await db.query(query, { days });
+        return await db.query('SELECT * FROM fn_get_expiring_units($1)', [days]);
     } catch (err) {
         throw err;
     }
@@ -39,7 +30,7 @@ const removeExpiredUnits = async () => {
     try {
         const query = `
             DELETE FROM BloodUnit
-            WHERE ExpirationDate < CURDATE()
+            WHERE ExpiryDate < CURRENT_DATE
         `;
 
         return await db.query(query);
