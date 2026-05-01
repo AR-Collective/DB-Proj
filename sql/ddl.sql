@@ -5,7 +5,7 @@ CREATE TABLE UserAccount (
     LastName VARCHAR(50) NOT NULL,
     Email VARCHAR(255) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
-    Contact VARCHAR(20) NOT NULL,
+    Contact VARCHAR(20) NOT NULL UNIQUE,
     Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
     LastLogin TIMESTAMP,
     Status VARCHAR(10) NOT NULL CHECK (
