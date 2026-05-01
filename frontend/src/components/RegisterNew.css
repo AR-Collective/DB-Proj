@@ -23,6 +23,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -36,7 +37,7 @@
     font-weight: 700;
 }
 
-.register-step > p {
+.register-step>p {
     color: #666;
     margin-bottom: 30px;
     font-size: 14px;
@@ -101,17 +102,17 @@
 }
 
 /* Step 1: Email Form */
-.form-group > div {
+.form-group>div {
     display: flex;
     gap: 10px;
     align-items: flex-end;
 }
 
-.form-group > div > div {
+.form-group>div>div {
     flex: 1;
 }
 
-.form-group > div input {
+.form-group>div input {
     flex: 1;
 }
 

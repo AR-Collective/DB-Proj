@@ -54,7 +54,7 @@ export default function RegisterNew() {
             };
 
             const response = await api.post('/auth/step/complete-registration', payload);
-            
+
             // Success - redirect to login or dashboard
             window.location.href = '/login';
         } catch (err) {
@@ -245,7 +245,7 @@ export default function RegisterNew() {
                                 disabled={loading}
                             />
                         </div>
-                        <button 
+                        <button
                             onClick={handleEmailNext}
                             disabled={loading}
                             className="btn-next"
@@ -267,7 +267,7 @@ export default function RegisterNew() {
 
                     {!isNewUser && (
                         <div className="existing-user-banner">
-                            ✓ Account found! Your existing credentials will be used. <br/>
+                            ✓ Account found! Your existing credentials will be used. <br />
                             <small>Existing roles: {existingRoles.join(', ')}</small>
                         </div>
                     )}
@@ -294,7 +294,7 @@ export default function RegisterNew() {
                         ))}
                     </div>
 
-                    <button 
+                    <button
                         onClick={() => setStep(1)}
                         className="btn-back"
                     >
