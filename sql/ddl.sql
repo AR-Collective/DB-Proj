@@ -1,16 +1,13 @@
--- Select database
-USE defaultdb;
-
 -- UserAccount table
 CREATE TABLE UserAccount (
-    UserID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID SERIAL PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
     Email VARCHAR(255) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
     Contact VARCHAR(20) NOT NULL,
     Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
-    LastLogin DATETIME,
+    LastLogin TIMESTAMP,
     Status VARCHAR(10) NOT NULL CHECK (
         Status IN ('Active', 'Inactive')
     )
@@ -33,7 +30,7 @@ CREATE TABLE UserRole (
 
 -- BloodGroup table
 CREATE TABLE BloodGroup (
-    BloodGroupID INT AUTO_INCREMENT PRIMARY KEY,
+    BloodGroupID SERIAL PRIMARY KEY,
     BloodType CHAR(3) NOT NULL,
     CompatibilityNotes VARCHAR(255),
     DemandLevel VARCHAR(10) CHECK (
@@ -55,7 +52,7 @@ CREATE TABLE Donor (
 
 -- Hospital table
 CREATE TABLE Hospital (
-    HospitalID INT AUTO_INCREMENT PRIMARY KEY,
+    HospitalID SERIAL PRIMARY KEY,
     Name VARCHAR(100) NOT NULL,
     Contact VARCHAR(20) NOT NULL,
     Location VARCHAR(100) NOT NULL,
@@ -86,7 +83,7 @@ CREATE TABLE Patient (
 
 -- StorageLocation table
 CREATE TABLE StorageLocation (
-    LocationID INT AUTO_INCREMENT PRIMARY KEY,
+    LocationID SERIAL PRIMARY KEY,
     LocationName VARCHAR(50) NOT NULL UNIQUE,
     Address VARCHAR(100) NOT NULL UNIQUE,
     Capacity INT NOT NULL,
@@ -105,16 +102,16 @@ CREATE TABLE Staff (
 
 -- Donation table
 CREATE TABLE Donation (
-    DonationID INT AUTO_INCREMENT PRIMARY KEY,
+    DonationID SERIAL PRIMARY KEY,
     DonorID INT NOT NULL,
-    DonationDate DATE DEFAULT(CURRENT_DATE) NOT NULL,
+    DonationDate DATE DEFAULT CURRENT_DATE NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
     StaffID INT NOT NULL
 );
 
 -- TestResult table
 CREATE TABLE TestResult (
-    TestID INT AUTO_INCREMENT PRIMARY KEY,
+    TestID SERIAL PRIMARY KEY,
     PatientID INT,
     DonationID INT NOT NULL,
     ScreeningStatus VARCHAR(4) NOT NULL CHECK (
@@ -122,13 +119,13 @@ CREATE TABLE TestResult (
     ),
     DiseaseIndicators VARCHAR(100),
     Notes VARCHAR(255),
-    TestDate DATE DEFAULT(CURRENT_DATE) NOT NULL,
+    TestDate DATE DEFAULT CURRENT_DATE NOT NULL,
     CONSTRAINT Unique_TestResDonation UNIQUE (DonationID)
 );
 
 -- BloodUnit table
 CREATE TABLE BloodUnit (
-    UnitID INT AUTO_INCREMENT PRIMARY KEY,
+    UnitID SERIAL PRIMARY KEY,
     BloodGroupID INT NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
     ExpiryDate DATE NOT NULL,
@@ -145,13 +142,13 @@ CREATE TABLE BloodUnit (
 
 -- BloodRequest table
 CREATE TABLE BloodRequest (
-    RequestID INT AUTO_INCREMENT PRIMARY KEY,
+    RequestID SERIAL PRIMARY KEY,
     PatientID INT NOT NULL,
     HospitalID INT NOT NULL,
     BloodGroupID INT NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
     PatientDisease VARCHAR(100),
-    RequestDate DATE DEFAULT(CURRENT_DATE) NOT NULL,
+    RequestDate DATE DEFAULT CURRENT_DATE NOT NULL,
     FulfillmentStatus VARCHAR(10) NOT NULL CHECK (
         FulfillmentStatus IN (
             'Pending',
@@ -163,25 +160,25 @@ CREATE TABLE BloodRequest (
 
 -- Foreign key constraints
 ALTER TABLE Donor
-ADD CONSTRAINT FK_Donor_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID);
+    ADD CONSTRAINT FK_Donor_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID);
 
 ALTER TABLE Staff
-ADD CONSTRAINT FK_Staff_StorageLocation FOREIGN KEY (AssignedLocationID) REFERENCES StorageLocation (LocationID) ON DELETE SET NULL;
+    ADD CONSTRAINT FK_Staff_StorageLocation FOREIGN KEY (AssignedLocationID) REFERENCES StorageLocation (LocationID) ON DELETE SET NULL;
 
 ALTER TABLE Donation
-ADD CONSTRAINT FK_Donation_Donor FOREIGN KEY (DonorID) REFERENCES Donor (DonorID),
-ADD CONSTRAINT FK_Donation_Staff FOREIGN KEY (StaffID) REFERENCES Staff (StaffID);
+    ADD CONSTRAINT FK_Donation_Donor FOREIGN KEY (DonorID) REFERENCES Donor (DonorID),
+    ADD CONSTRAINT FK_Donation_Staff FOREIGN KEY (StaffID) REFERENCES Staff (StaffID);
 
 ALTER TABLE TestResult
-ADD CONSTRAINT FK_TestResult_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE,
-ADD CONSTRAINT FK_TestResult_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID);
+    ADD CONSTRAINT FK_TestResult_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE,
+    ADD CONSTRAINT FK_TestResult_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID);
 
 ALTER TABLE BloodUnit
-ADD CONSTRAINT FK_BloodUnit_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
-ADD CONSTRAINT FK_BloodUnit_StorageLocation FOREIGN KEY (LocationID) REFERENCES StorageLocation (LocationID),
-ADD CONSTRAINT FK_BloodUnit_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE;
+    ADD CONSTRAINT FK_BloodUnit_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
+    ADD CONSTRAINT FK_BloodUnit_StorageLocation FOREIGN KEY (LocationID) REFERENCES StorageLocation (LocationID),
+    ADD CONSTRAINT FK_BloodUnit_Donation FOREIGN KEY (DonationID) REFERENCES Donation (DonationID) ON DELETE CASCADE;
 
 ALTER TABLE BloodRequest
-ADD CONSTRAINT FK_BloodRequest_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital (HospitalID),
-ADD CONSTRAINT FK_BloodRequest_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
-ADD CONSTRAINT FK_BloodRequest_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID) ON DELETE CASCADE;
+    ADD CONSTRAINT FK_BloodRequest_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital (HospitalID),
+    ADD CONSTRAINT FK_BloodRequest_BloodGroup FOREIGN KEY (BloodGroupID) REFERENCES BloodGroup (BloodGroupID),
+    ADD CONSTRAINT FK_BloodRequest_Patient FOREIGN KEY (PatientID) REFERENCES Patient (PatientID) ON DELETE CASCADE;
