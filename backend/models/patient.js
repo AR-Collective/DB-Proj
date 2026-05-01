@@ -11,11 +11,11 @@ const getCompatibleBloodForPatient = async (patientId) => {
             JOIN BloodGroup b ON p.BloodGroupID = b.BloodGroupID
             LEFT JOIN BloodUnit bu ON b.BloodGroupID = bu.BloodGroupID AND bu.Status = 'Available'
             LEFT JOIN StorageLocation sl ON bu.LocationID = sl.LocationID
-            WHERE p.PatientID = @patientid
+            WHERE p.PatientID = $1
             ORDER BY bu.ExpiryDate ASC
         `;
 
-        return await db.query(query, { patientid: patientId });
+        return await db.query(query, [patientId]);
     } catch (err) {
         throw err;
     }
@@ -30,11 +30,11 @@ const searchPatientByDisease = async (disease) => {
             JOIN UserAccount u ON p.PatientID = u.UserID
             JOIN Hospital h ON p.HospitalID = h.HospitalID
             JOIN BloodGroup b ON p.BloodGroupID = b.BloodGroupID
-            WHERE p.Disease LIKE @disease
+            WHERE p.Disease ILIKE $1
             ORDER BY u.FirstName ASC, u.LastName ASC
         `;
 
-        return await db.query(query, { disease: `%${disease}%` });
+        return await db.query(query, [`%${disease}%`]);
     } catch (err) {
         throw err;
     }

@@ -6,7 +6,7 @@ const getHospitalStock = async (req, res) => {
 
         res.status(200).json({
             message: "Hospital vs available stock retrieved successfully",
-            data: result.recordset
+            data: result
         })
     } catch (error) {
         console.error("Get hospital stock error: ", error)

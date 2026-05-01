@@ -7,10 +7,10 @@ const searchDonorByBloodType = async (bloodType) => {
             FROM Donor d
             JOIN UserAccount u ON d.DonorID = u.UserID
             JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
-            WHERE b.BloodType = @bloodtype
+            WHERE b.BloodType = $1
         `;
 
-        return await db.query(query, { bloodtype: bloodType });
+        return await db.query(query, [bloodType]);
     } catch (err) {
         throw err;
     }
@@ -25,11 +25,11 @@ const getDonorHistory = async (donorId) => {
             JOIN Donor donor ON d.DonorID = donor.DonorID
             JOIN UserAccount u ON donor.DonorID = u.UserID
             JOIN BloodGroup b ON donor.BloodGroupID = b.BloodGroupID
-            WHERE d.DonorID = @donorid
+            WHERE d.DonorID = $1
             ORDER BY d.DonationDate DESC
         `;
 
-        return await db.query(query, { donorid: donorId });
+        return await db.query(query, [donorId]);
     } catch (err) {
         throw err;
     }
@@ -39,11 +39,11 @@ const updateDonorRating = async (donorId, rating) => {
     try {
         const query = `
             UPDATE Donor
-            SET Rating = @rating
-            WHERE DonorID = @donorid
+            SET Rating = $1
+            WHERE DonorID = $2
         `;
 
-        return await db.query(query, { donorid: donorId, rating });
+        return await db.query(query, [rating, donorId]);
     } catch (err) {
         throw err;
     }
