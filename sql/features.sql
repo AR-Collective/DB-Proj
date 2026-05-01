@@ -393,3 +393,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 22 Register User
+CREATE OR REPLACE FUNCTION fn_register_user(p_fname VARCHAR, p_lname VARCHAR, p_email VARCHAR, p_password VARCHAR,p_contact VARCHAR, p_gender bpchar(1), p_last_login TIMESTAMP )
+RETURNS INT   
+LANGUAGE plpgsql AS $$
+DECLARE return_user_id INT;
+BEGIN
+                INSERT INTO UserAccount (
+                    FirstName, LastName, Email, Password, 
+                    Contact, Gender, LastLogin, Status
+                )
+                VALUES (
+                    p_fname, p_lname, p_email, p_password, 
+                    p_contact, p_gender, p_last_login, 'Active'
+                )
+                RETURNING UserID into return_user_id;
+                Return return_user_id;
+END;
+$$;
+
+-- 23 Add role to user
+CREATE OR REPLACE FUNCTION fn_add_role(p_userid INT, p_role VARCHAR )
+RETURNS VOID 
+LANGUAGE plpgsql AS $$
+DECLARE return_user_id INT;
+BEGIN
+            IF NOT EXISTS
+                (SELECT 1
+                FROM useraccount
+                WHERE userid = p_userid) THEN 
+            RAISE
+            EXCEPTION 'Cannot add role. User ID % does not exist in UserAccount.', p_userid;
+            END IF;
+                INSERT INTO userrole (userid, role)
+                VALUES (p_userid, p_role);
+END;
+$$;
+
+-- 24 Add user with role
+CREATE OR REPLACE FUNCTION fn_add_user_wth_role(
+p_fname VARCHAR, p_lname VARCHAR, p_email VARCHAR, p_password VARCHAR,p_contact VARCHAR, p_gender bpchar(1), p_last_login TIMESTAMP, p_role VARCHAR
+)
+RETURNS INT
+LANGUAGE plpgsql AS $$
+DECLARE return_user_id INT;
+BEGIN
+SELECT fn_register_user(
+p_fname , p_lname , p_email , p_password ,p_contact , p_gender , p_last_login ) INTO return_user_id;
+Perform fn_add_role(return_user_id, p_role);
+return return_user_id ;
+END;
+$$;
+
+-- 25 get user by email
+CREATE OR REPLACE FUNCTION fn_get_user_by_email(p_email VARCHAR)
+RETURNS SETOF UserAccount   
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN QUERY 
+    SELECT * FROM UserAccount WHERE email = p_email;
+END;
+$$;
