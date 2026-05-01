@@ -49,9 +49,23 @@ const getReqByHospital = async (data) => {
     }
 };
 
+const fulfillRequestm = async (data) => {
+    try {
+        await db.execute(sql`
+            CALL sp_fulfill_request(
+                ${data.requestid},
+                ${data.unitid}
+            )`);
+
+        return { success: true };
+    } catch (error) {
+        throw error;
+    }
+};
+
 export {
     getBloodUnit,
     newBloodRequest,
     getReqByHospital,
-
+    fulfillRequestm
 };
