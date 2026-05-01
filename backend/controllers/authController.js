@@ -1,4 +1,4 @@
-import { registerUserModel, loginUserModel, getUserRoles } from '../models/auth.js';
+import { registerUserModel, getUserRoles, getUserByEmail } from '../models/auth.js';
 import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
@@ -77,22 +77,27 @@ export const loginUser = async (req, res) => {
         }
     }
 
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { email, password, role } = req.body;
+    if (!email || !password || !role) {
         return res.status(400).json({ message: 'Missing email or password.' });
     }
 
-    const record = await loginUserModel(email);
+    const record = await getUserByEmail(email);
     if (!record) {
         return res.status(404).json({ message: 'User not found.' });
     }
 
-    const isPasswordCorrect = await verifyPassword(record.Password, password);
+    const isPasswordCorrect = await verifyPassword(record.password, password);
     if (!isPasswordCorrect) {
         return res.status(400).json({ message: 'Invalid Password' });
     }
 
-    const roles = await getUserRoles(record.UserID);
+    const roles = await getUserRoles(record.userid);
+    console.log(roles)
+    if (!roles.includes(role)) {
+        console.log("NOT FOUND")
+        throw err
+    }
     const user = {
         userid: record.UserID,
         email: record.Email,
@@ -100,8 +105,7 @@ export const loginUser = async (req, res) => {
         lastName: record.LastName,
         contact: record.Contact,
         gender: record.Gender,
-        role: roles[0],
-        roles
+        role: role,
     };
 
     const token = generateToken(user);
