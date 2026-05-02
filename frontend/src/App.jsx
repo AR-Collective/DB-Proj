@@ -4,6 +4,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import './App.css'
 import Login from './views/Login.jsx'
 import Landing from './pages/Landing.jsx'
+import About from './pages/About.jsx'
 
 
 const serverUrl = 'http://localhost:3000'
@@ -39,6 +40,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/about" element={<About />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route element={<PrivateRoutes />}>
