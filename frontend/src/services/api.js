@@ -27,8 +27,8 @@ export const authAPI = {
 
 export const bloodRequestAPI = {
   createRequest: (data) => api.post('/bloodrequest/insertBReq', data),
-  getRequestsByHospital: (hospitalid) => api.get('/bloodrequest/getReqByHospital', {data: {hospitalid}}),
-  getBloodUnits: (breqid) => api.get('/bloodrequest/getBU', { data: { breqid } }),
+  getRequestsByHospital: (hospitalid) => api.get('/bloodrequest/getReqByHospital', {params: {hospitalid}}),
+  getBloodUnits: (breqid) => api.get('/bloodrequest/getBU', { params: { breqid } }),
   fulfillRequest: (requestid, unitid) =>  api.patch('/bloodrequest/fulfillRequest', { requestid, unitid })
 };
 

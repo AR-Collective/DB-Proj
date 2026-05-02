@@ -26,7 +26,7 @@ const insertBloodRequest = async (req,res) => {
 
 const getBloodUnits = async (req, res) => {
     try{
-        const {breqid} = req.body
+        const {breqid} = req.query
 
         if (!breqid){
             return res.status(400).json({message: "Blood Request ID is missing"});
@@ -48,7 +48,7 @@ const getBloodUnits = async (req, res) => {
 }
 const getRequestsByHospital = async (req,res)=> {
     try {
-        const {hospitalid} = req.body
+        const {hospitalid} = req.query
 
         if (!hospitalid)
     {
