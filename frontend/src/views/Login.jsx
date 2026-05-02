@@ -26,9 +26,7 @@ export default function Login() {
 			setLoading(false);
 			return;
 		}
-
 		try {
-
 			let res;
 			try {
 
