@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { bloodRequestAPI } from '../services/api';
 import './BloodRequests.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const BloodRequests = () => {
     const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
-        patientId: '',
-        bloodType: '',
-        unitsRequested: '',
-        urgencyLevel: 'normal',
-        requestDate: new Date().toISOString().split('T')[0],
-        requiredDate: '',
+        patientid: '',
+        hospitalid: '',
+        bloodgroupid: '',
+        quantity: '',
+        patientdisease: '',
     });
+    const [hospitalId, setHospitalId] = useState('');
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchRequests();
     }, []);
 
     const fetchRequests = async () => {
+        if (!hospitalId) return;
         try {
-            const response = await bloodRequestAPI.getRequests();
-            setRequests(response.data);
+            const response = await bloodRequestAPI.getRequestsByHospital(hospitalId);
+            setRequests(response.data.data || []);
         } catch (err) {
             setError('Failed to load blood requests');
         } finally {
@@ -44,27 +47,15 @@ const BloodRequests = () => {
             await bloodRequestAPI.createRequest(formData);
             setShowForm(false);
             setFormData({
-                patientId: '',
-                bloodType: '',
-                unitsRequested: '',
-                urgencyLevel: 'normal',
-                requestDate: new Date().toISOString().split('T')[0],
-                requiredDate: '',
+                patientid: '',
+                hospitalid: '',
+                bloodgroupid: '',
+                quantity: '',
+                patientdisease: '',
             });
             fetchRequests();
         } catch (err) {
             setError('Failed to create blood request');
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                await bloodRequestAPI.deleteRequest(id);
-                fetchRequests();
-            } catch (err) {
-                setError('Failed to delete blood request');
-            }
         }
     };
 
@@ -76,6 +67,15 @@ const BloodRequests = () => {
         <div className="blood-requests-container">
             <div className="header">
                 <h1>Blood Requests</h1>
+                <div className="form-group">
+                    <input
+                        type="number"
+                        placeholder="Enter Hospital ID"
+                        value={hospitalId}
+                        onChange={(e) => setHospitalId(e.target.value)}
+                    />
+                    <button onClick={fetchRequests}>Load Requests</button>
+                </div>
                 <button onClick={() => setShowForm(!showForm)} className="create-button">
                     {showForm ? 'Cancel' : 'Create New Request'}
                 </button>
@@ -89,91 +89,64 @@ const BloodRequests = () => {
                     <form onSubmit={handleSubmit}>
                         <div className="form-row">
                             <div className="form-group">
-                                <label htmlFor="patientId">Patient ID</label>
+                                <label htmlFor="patientid">Patient ID</label>
                                 <input
                                     type="number"
-                                    id="patientId"
-                                    name="patientId"
-                                    value={formData.patientId}
+                                    id="patientid"
+                                    name="patientid"
+                                    value={formData.patientid}
                                     onChange={handleChange}
                                     required
                                 />
                             </div>
                             <div className="form-group">
-                                <label htmlFor="bloodType">Blood Type</label>
-                                <select
-                                    id="bloodType"
-                                    name="bloodType"
-                                    value={formData.bloodType}
+                                <label htmlFor="hospitalid">Hospital ID</label>
+                                <input
+                                    type="number"
+                                    id="hospitalid"
+                                    name="hospitalid"
+                                    value={formData.hospitalid}
                                     onChange={handleChange}
                                     required
-                                >
-                                    <option value="">Select Blood Type</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                </select>
+                                />
                             </div>
                         </div>
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label htmlFor="unitsRequested">Units Requested</label>
+                                <label htmlFor="bloodgroupid">Blood Group ID</label>
                                 <input
                                     type="number"
-                                    id="unitsRequested"
-                                    name="unitsRequested"
-                                    value={formData.unitsRequested}
+                                    id="bloodgroupid"
+                                    name="bloodgroupid"
+                                    value={formData.bloodgroupid}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="quantity">Quantity</label>
+                                <input
+                                    type="number"
+                                    id="quantity"
+                                    name="quantity"
+                                    value={formData.quantity}
                                     onChange={handleChange}
                                     min="1"
                                     required
                                 />
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="urgencyLevel">Urgency Level</label>
-                                <select
-                                    id="urgencyLevel"
-                                    name="urgencyLevel"
-                                    value={formData.urgencyLevel}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="low">Low</option>
-                                    <option value="normal">Normal</option>
-                                    <option value="high">High</option>
-                                    <option value="critical">Critical</option>
-                                </select>
-                            </div>
                         </div>
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="requestDate">Request Date</label>
-                                <input
-                                    type="date"
-                                    id="requestDate"
-                                    name="requestDate"
-                                    value={formData.requestDate}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="requiredDate">Required Date</label>
-                                <input
-                                    type="date"
-                                    id="requiredDate"
-                                    name="requiredDate"
-                                    value={formData.requiredDate}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
+                        <div className="form-group">
+                            <label htmlFor="patientdisease">Patient Disease</label>
+                            <input
+                                type="text"
+                                id="patientdisease"
+                                name="patientdisease"
+                                value={formData.patientdisease}
+                                onChange={handleChange}
+                            />
                         </div>
 
                         <button type="submit" className="submit-button">Create Request</button>
@@ -182,41 +155,30 @@ const BloodRequests = () => {
             )}
 
             <div className="requests-table">
-                <table>
+                <table style={{ color: 'black' }}>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Request ID</th>
                             <th>Patient ID</th>
-                            <th>Blood Type</th>
-                            <th>Units</th>
-                            <th>Urgency</th>
+                            <th>Hospital ID</th>
+                            <th>Blood Group ID</th>
+                            <th>Quantity</th>
+                            <th>Disease</th>
                             <th>Status</th>
                             <th>Request Date</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {requests.map((request) => (
-                            <tr key={request.requestId}>
-                                <td>{request.requestId}</td>
-                                <td>{request.patientId}</td>
-                                <td>{request.bloodType}</td>
-                                <td>{request.unitsRequested}</td>
-                                <td className={`urgency-${request.urgencyLevel}`}>
-                                    {request.urgencyLevel}
-                                </td>
-                                <td className={`status-${request.status}`}>
-                                    {request.status}
-                                </td>
-                                <td>{new Date(request.requestDate).toLocaleDateString()}</td>
-                                <td>
-                                    <button
-                                        onClick={() => handleDelete(request.requestId)}
-                                        className="delete-button"
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+                        {requests.map((request, index) => (
+                            <tr key={index}>
+                                <td>{request.requestid}</td>
+                                <td>{request.patientid}</td>
+                                <td>{request.hospitalid}</td>
+                                <td>{request.bloodgroupid}</td>
+                                <td>{request.quantity}</td>
+                                <td>{request.patientdisease || '-'}</td>
+                                <td>{request.fulfillmentstatus}</td>
+                                <td>{request.requestdate ? new Date(request.requestdate).toLocaleDateString() : 'N/A'}</td>
                             </tr>
                         ))}
                     </tbody>

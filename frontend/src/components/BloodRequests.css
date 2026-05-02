@@ -11,6 +11,19 @@
     margin-bottom: 30px;
 }
 
+.header .form-group {
+    flex: 0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-left: -200px
+}
+
+.header .form-group input {
+    width: auto;
+    padding: 10px;
+}
+
 .header h1 {
     color: #333;
     margin: 0;

@@ -4,19 +4,18 @@ const API_BASE_URL = 'http://localhost:3000'; // Uses the proxy configured in vi
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,  // sends cookies automatically
 });
 
 // Add token to requests if available
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+//api.interceptors.request.use((config) => {
+//  const token = localStorage.getItem('token');
+//  if (token) {
+//    config.headers.Authorization = `Bearer ${token}`;
+//  }
+//  return config;
+//});
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
@@ -28,8 +27,8 @@ export const authAPI = {
 
 export const bloodRequestAPI = {
   createRequest: (data) => api.post('/bloodrequest/insertBReq', data),
-  getRequestsByHospital: (hospitalid) => api.get('/bloodrequest/getReqByHospital', {data: {hospitalid}}),
-  getBloodUnits: (breqid) => api.get('/bloodrequest/getBU', { data: { breqid } }),
+  getRequestsByHospital: (hospitalid) => api.get('/bloodrequest/getReqByHospital', {params: {hospitalid}}),
+  getBloodUnits: (breqid) => api.get('/bloodrequest/getBU', { params: { breqid } }),
   fulfillRequest: (requestid, unitid) =>  api.patch('/bloodrequest/fulfillRequest', { requestid, unitid })
 };
 

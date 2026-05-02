@@ -21,18 +21,15 @@ export const authorizeRoles = (...allowedRoles) => {
 };
 
 export function attachToken(req, res, next) {
-	// ? here means if authorization doesnt exists in header then dont try to split
-	const token = req.headers['authorization']?.split(' ')[1]
-
-	if (!token) {
-		return res.status(401).json({ error: 'No token provided' })
-	}
-
-	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-		if (err) return res.status(403).json({ error: 'Invalid token' })
-		req.user = decoded
-		next()
-	})
+    const cookie = req.cookies.auth_token;
+    if (!cookie) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+    jwt.verify(cookie, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+        req.user = decoded;
+        next();
+    });
 }
 
 export function verifyToken(req, res, next) {

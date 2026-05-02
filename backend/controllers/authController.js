@@ -40,7 +40,7 @@ const baseRegister = async (req, res, role) => {
 
         const token = generateToken(user);
 
-        res.cookie('auth_token', token, { httpOnly: true, secure: true });
+        res.cookie('auth_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
         return res.status(201).json({ message: 'Registered', token, user });
     } catch (error) {
         console.error(`${role} Registration Error:`, error);
@@ -113,6 +113,6 @@ export const loginUser = async (req, res) => {
     };
 
     const token = generateToken(user);
-    res.cookie('auth_token', token, { httpOnly: true, secure: true });
+    res.cookie('auth_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
     return res.json({ message: 'Auth Successful', token, user });
 };
