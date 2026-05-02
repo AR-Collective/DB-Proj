@@ -29,10 +29,10 @@ const Footer = () => {
 	];
 
 	const socialLinks = [
-		{ icon: Facebook, name: "Facebook", url: "#" },
-		{ icon: Twitter, name: "Twitter", url: "#" },
-		{ icon: Instagram, name: "Instagram", url: "#" },
-		{ icon: Linkedin, name: "LinkedIn", url: "#" },
+		{ icon: FaFacebook, name: "Facebook", url: "#" },
+		{ icon: FaTwitter, name: "Twitter", url: "#" },
+		{ icon: FaInstagram, name: "Instagram", url: "#" },
+		{ icon: FaLinkedin, name: "LinkedIn", url: "#" },
 	];
 
 	return (

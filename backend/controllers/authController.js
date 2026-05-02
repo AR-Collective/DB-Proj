@@ -93,12 +93,12 @@ export const loginUser = async (req, res) => {
         return res.status(404).json({ message: 'User not found.' });
     }
 
-    const isPasswordCorrect = await verifyPassword(record.password, password);
+    const isPasswordCorrect = await verifyPassword(record.Password, password);
     if (!isPasswordCorrect) {
         return res.status(400).json({ message: 'Invalid Password' });
     }
 
-    const roles = await getUserRoles(record.userid);
+    const roles = await getUserRoles(record.UserID);
     console.log(roles)
     if (!roles.includes(role)) {
         console.log("NOT FOUND")
@@ -112,6 +112,7 @@ export const loginUser = async (req, res) => {
         contact: record.Contact,
         gender: record.Gender,
         role: role,
+        roles: roles,
     };
 
     const token = generateToken(user);

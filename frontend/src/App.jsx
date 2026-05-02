@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Navigate, Outlet } from 'react-router-dom'
 import './App.css'
 import Login from './views/Login.jsx'
+import Landing from './pages/Landing.jsx'
 
 
 const serverUrl = 'http://localhost:3000'
@@ -37,10 +38,11 @@ function Register() {
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route element={<PrivateRoutes />}>
-        <Route path='/' element={<Dashboard />} />
+        <Route path='/dashboard' element={<Dashboard />} />
 
       </Route>
     </Routes>
