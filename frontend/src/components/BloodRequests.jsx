@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { bloodRequestAPI } from '../services/api';
 import './BloodRequests.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const BloodRequests = () => {
     const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
@@ -15,15 +16,18 @@ const BloodRequests = () => {
         requestDate: new Date().toISOString().split('T')[0],
         requiredDate: '',
     });
+    const [hospitalId, setHospitalId] = useState('');
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchRequests();
     }, []);
 
     const fetchRequests = async () => {
+        if (!hospitalId) return;
         try {
-            const response = await bloodRequestAPI.getRequests();
-            setRequests(response.data);
+            const response = await bloodRequestAPI.getRequestsByHospital(hospitalId);
+            setRequests(response.data.data || []);
         } catch (err) {
             setError('Failed to load blood requests');
         } finally {
@@ -57,16 +61,7 @@ const BloodRequests = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this request?')) {
-            try {
-                await bloodRequestAPI.deleteRequest(id);
-                fetchRequests();
-            } catch (err) {
-                setError('Failed to delete blood request');
-            }
-        }
-    };
+   
 
     if (loading) {
         return <div className="blood-requests-container"><div className="loading">Loading blood requests...</div></div>;
@@ -74,13 +69,21 @@ const BloodRequests = () => {
 
     return (
         <div className="blood-requests-container">
-            <div className="header">
+            <div className="header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <h1>Blood Requests</h1>
+                <div className="form-group">
+                    <input
+                        type="number"
+                        placeholder="Enter Hospital ID"
+                        value={hospitalId}
+                        onChange={(e) => setHospitalId(e.target.value)}
+                    />
+                    <button onClick={fetchRequests}>Load Requests</button>
+                </div>
                 <button onClick={() => setShowForm(!showForm)} className="create-button">
                     {showForm ? 'Cancel' : 'Create New Request'}
                 </button>
             </div>
-
             {error && <div className="error-message">{error}</div>}
 
             {showForm && (
@@ -209,14 +212,6 @@ const BloodRequests = () => {
                                     {request.status}
                                 </td>
                                 <td>{new Date(request.requestDate).toLocaleDateString()}</td>
-                                <td>
-                                    <button
-                                        onClick={() => handleDelete(request.requestId)}
-                                        className="delete-button"
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
                             </tr>
                         ))}
                     </tbody>
