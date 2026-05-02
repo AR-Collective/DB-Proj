@@ -19,7 +19,7 @@ const getBloodInventory = async (req, res) => {
 
 const getExpiringUnits = async (req, res) => {
     try {
-        const { days } = req.query
+        const { days } = req.body
         
         if (!days) {
             return res.status(400).json({ message: "Days parameter is missing" })
