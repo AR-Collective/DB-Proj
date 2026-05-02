@@ -78,7 +78,11 @@ export const loginUser = async (req, res) => {
     }
 
     const { email, password, role } = req.body;
-    if (!email || !password || !role) {
+    if (!role) {
+        return res.status(400).json({ message: 'Missing role' });
+    }
+
+    if (!email || !password) {
         return res.status(400).json({ message: 'Missing email or password.' });
     }
 
