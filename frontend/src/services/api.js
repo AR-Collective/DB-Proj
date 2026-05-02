@@ -27,24 +27,40 @@ export const authAPI = {
 };
 
 export const bloodRequestAPI = {
-  createRequest: (data) => api.post('/bloodrequest/create', data),
-  getRequests: () => api.get('/bloodrequest/get'),
-  updateRequest: (id, data) => api.put(`/bloodrequest/update/${id}`, data),
-  deleteRequest: (id) => api.delete(`/bloodrequest/delete/${id}`),
+  createRequest: (data) => api.post('/bloodrequest/insertBReq', data),
+  getRequestsByHospital: (hospitalid) => api.get('/bloodrequest/getReqByHospital', {data: {hospitalid}}),
+  getBloodUnits: (breqid) => api.get('/bloodrequest/getBU', { data: { breqid } }),
+  fulfillRequest: (requestid, unitid) =>  api.patch('/bloodrequest/fulfillRequest', { requestid, unitid })
 };
 
+
 export const donorAPI = {
-  getCompatibleBlood: (patientId) => api.get(`/donor/compatible/${patientId}`),
-  getDiseaseWisePatients: (disease) => api.get(`/donor/disease/${disease}`),
+  searchDonors: (bloodtype) => api.post('/donor/search', { bloodtype }),
+  getDonationHistory: (donorid) => api.post('/donor/history', { donorid }),
+  rateDonor: (donorid, rating) => api.post('/donor/rate', { donorid, rating }),
+  getAverageDonations: () => api.get('/donor/statistics/average'),
+  getNeverTested: () => api.get('/donor/never-tested'),
+};
+
+export const patientAPI = {
+  getCompatibleBlood: (patientid) => api.post('/patient/compatible-blood', { patientid }),
+  searchByDisease: (disease) => api.post('/patient/search-disease', { disease }),
 };
 
 export const inventoryAPI = {
-  getBloodTypeAvailability: () => api.get('/inventory/availability'),
+  getByLocation: () => api.get('/inventory/by-location'),
+  getExpiringUnits: (days) => api.get('/inventory/expiring', { params: { days } }),
+  removeExpiredUnits: () => api.delete('/inventory/remove-expired'),
+  getBloodDemand: () => api.get('/inventory/demand'),
+  getAvailabilityReport: () => api.get('/inventory/availability-report'),
+};
+
+export const hospitalAPI = {
+  getHospitalStock: () => api.get('/hospital/stock-comparison'),
 };
 
 export const testingAPI = {
-  getTestResults: (donationId) => api.get(`/testing/results/${donationId}`),
-  getNeverTestedDonors: () => api.get('/testing/never-tested'),
+  getTestResults: () => api.get('/testing/results'),
 };
 
 export default api;
