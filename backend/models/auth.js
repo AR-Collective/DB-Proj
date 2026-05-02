@@ -3,10 +3,8 @@ import { sql } from 'drizzle-orm';
 
 export const getUserByEmail = async (email) => {
     try {
-        const result = await db.execute(
-            sql`SELECT * FROM UserAccount WHERE Email = ${email}`
-        );
-        return result[0];
+        const result = await db.execute(sql`SELECT * FROM fn_get_user_by_email(${email})`);
+        return result.length > 0 ? result[0] : null;
     } catch (err) {
         throw err;
     }
@@ -30,38 +28,28 @@ export const registerUserModel = async (data) => {
 
         if (!existingUser) {
             const result = await db.execute(sql`
-                INSERT INTO UserAccount (
-                    FirstName, LastName, Email, Password, 
-                    Contact, Gender, LastLogin, Status
-                )
-                VALUES (
-                    ${data.firstName}, ${data.lastName}, ${data.email}, ${data.password}, 
-                    ${data.contact}, ${data.gender || null}, ${data.lastLogin}, 'Active'
-                )
-                RETURNING UserID
-            `);
-
-
+            Select * FROM fn_add_user_wth_role( 
+                        ${data.firstName}, ${data.lastName}, ${data.email}, ${data.password}, 
+                        ${data.contact}, ${data.gender || null}, ${data.lastLogin}, ${data.role})`);
             userId = result[0].userid;
-        } else {
-            userId = existingUser.userid;
+            return { userId, result }
         }
+        userId = existingUser.userid;
 
-        const roleCheck = await db.execute(
-            sql`SELECT 1 FROM UserRole WHERE UserID = ${userId} AND Role = ${data.role}`
-        );
+        const result = await db.execute(sql`SELECT fn_add_role(${userId}, ${data.role}) AS role_added`);
+        const roleAdded = result[0].role_added;
 
-        if (roleCheck.length > 0) {
+        if (!roleAdded) {
             const error = new Error('A user with this email and role already exists.');
             error.code = 'ROLE_EXISTS';
             throw error;
         }
 
-        await db.execute(
-            sql`INSERT INTO UserRole (UserID, Role) VALUES (${userId}, ${data.role})`
-        );
-
-        return { userId, existingUser };
+        return {
+            userId: userId,
+            isNewUser: false,
+            user: existingUser
+        };
     } catch (err) {
         throw err;
     }
