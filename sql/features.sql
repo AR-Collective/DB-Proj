@@ -435,9 +435,9 @@ $$ LANGUAGE plpgsql;
 
 -- 22 Register User
 CREATE OR REPLACE FUNCTION fn_register_user(p_fname VARCHAR, p_lname VARCHAR, p_email VARCHAR, p_password VARCHAR,p_contact VARCHAR, p_gender bpchar(1), p_last_login TIMESTAMP )
-RETURNS INT   
+RETURNS useraccount   
 LANGUAGE plpgsql AS $$
-DECLARE return_user_id INT;
+DECLARE return_user useraccount;
 BEGIN
                 INSERT INTO UserAccount (
                     FirstName, LastName, Email, Password, 
@@ -447,26 +447,21 @@ BEGIN
                     p_fname, p_lname, p_email, p_password, 
                     p_contact, p_gender, p_last_login, 'Active'
                 )
-                RETURNING UserID into return_user_id;
-                Return return_user_id;
+                RETURNING * INTO return_user;
+                Return return_user;
 END;
 $$;
 
 -- 23 Add role to user
-CREATE OR REPLACE FUNCTION fn_add_role(p_userid INT, p_role VARCHAR )
-RETURNS VOID 
+CREATE OR REPLACE FUNCTION fn_add_role(p_userid INT, p_role VARCHAR)
+RETURNS BOOLEAN 
 LANGUAGE plpgsql AS $$
-DECLARE return_user_id INT;
 BEGIN
-            IF NOT EXISTS
-                (SELECT 1
-                FROM useraccount
-                WHERE userid = p_userid) THEN 
-            RAISE
-            EXCEPTION 'Cannot add role. User ID % does not exist in UserAccount.', p_userid;
-            END IF;
-                INSERT INTO userrole (userid, role)
-                VALUES (p_userid, p_role);
+    INSERT INTO userrole (userid, role)
+    VALUES (p_userid, p_role)
+    ON CONFLICT (userid, role) DO NOTHING;
+
+    RETURN FOUND; 
 END;
 $$;
 
@@ -474,14 +469,14 @@ $$;
 CREATE OR REPLACE FUNCTION fn_add_user_wth_role(
 p_fname VARCHAR, p_lname VARCHAR, p_email VARCHAR, p_password VARCHAR,p_contact VARCHAR, p_gender bpchar(1), p_last_login TIMESTAMP, p_role VARCHAR
 )
-RETURNS INT
+RETURNS UserAccount
 LANGUAGE plpgsql AS $$
-DECLARE return_user_id INT;
+DECLARE return_user useraccount;
 BEGIN
-SELECT fn_register_user(
-p_fname , p_lname , p_email , p_password ,p_contact , p_gender , p_last_login ) INTO return_user_id;
-Perform fn_add_role(return_user_id, p_role);
-return return_user_id ;
+Select * from fn_register_user(
+p_fname , p_lname , p_email , p_password ,p_contact , p_gender , p_last_login ) INTO return_user;
+Perform fn_add_role(return_user.userid, p_role);
+return return_user ;
 END;
 $$;
 
