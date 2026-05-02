@@ -1,4 +1,6 @@
 import { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested } from '../models/donor.js'
+import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 const searchDonors = async (req, res) => {
     try {
@@ -106,4 +108,21 @@ const getNeverTested = async (req, res) => {
     }
 }
 
-export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested }
+const getBloodGroups = async (req, res) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM BloodGroup ORDER BY BloodType`)
+
+        res.status(200).json({
+            message: "Blood groups retrieved successfully",
+            data: result
+        })
+    } catch (error) {
+        console.error("Get blood groups error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve blood groups",
+            error: error.message
+        })
+    }
+}
+
+export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups }

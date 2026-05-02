@@ -1,9 +1,13 @@
 import express from 'express'
-import { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested } from '../controllers/donorController.js'
+import { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups } from '../controllers/donorController.js'
 import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
+// Public route - for registration
+router.get('/blood-groups', getBloodGroups)
+
+// Protected routes
 router.use(verifyToken)
 router.use(authorizeRoles('Donor'))
 router.post('/search', searchDonors)

@@ -1,14 +1,19 @@
 import { registerUserModel, getUserRoles, getUserByEmail } from '../models/auth.js';
+import { registerDonorModel } from '../models/donor.js';
 import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
 const baseRegister = async (req, res, role) => {
     try {
-        const { email, password, firstName, lastName, contact, gender } = req.body;
+        const { email, password, firstName, lastName, contact, gender, age, bloodGroup } = req.body;
 
         if (!email || !password || !firstName || !lastName || !contact) {
             return res.status(400).json({ message: 'Missing required registration fields.' });
+        }
+
+        if (role === 'Donor' && (!age || !bloodGroup)) {
+            return res.status(400).json({ message: 'Age and blood group required for donor registration.' });
         }
 
         const hashedPassword = await hashPassword(password);
@@ -26,6 +31,12 @@ const baseRegister = async (req, res, role) => {
         };
 
         const { userId, existingUser } = await registerUserModel(data);
+        
+        // Register in Donor table if role is Donor
+        if (role === 'Donor') {
+            await registerDonorModel(userId, age, bloodGroup);
+        }
+
         const roles = await getUserRoles(userId);
         const user = {
             userid: userId,
@@ -34,7 +45,7 @@ const baseRegister = async (req, res, role) => {
             lastName: existingUser?.LastName || lastName,
             contact: existingUser?.Contact || contact,
             gender: existingUser?.Gender || gender,
-            role: data.role, // Use the role they just registered for
+            role: data.role,
             roles
         };
 

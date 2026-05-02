@@ -6,6 +6,7 @@ import Login from './views/Login.jsx'
 import Landing from './pages/Landing.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
+import RegisterDonor from './pages/RegisterDonor.jsx'
 
 const serverUrl = 'http://localhost:3000'
 
@@ -44,6 +45,7 @@ function App() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/register/donor" element={<RegisterDonor />} />
       <Route element={<PrivateRoutes />}>
         <Route path='/dashboard' element={<Dashboard />} />
 

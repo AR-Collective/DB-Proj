@@ -46,4 +46,31 @@ const getDonorsNeverTested = async () => {
     }
 };
 
-export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested };
+const registerDonorModel = async (userId, age, bloodType) => {
+    try {
+        // Query for matching blood group
+        let bgResult = await db.execute(sql`SELECT BloodGroupID FROM BloodGroup WHERE BloodType = ${bloodType}`);
+        
+        // Handle Result object - extract bloodGroupId (lowercase from API)
+        let bloodGroupId;
+        if (bgResult && bgResult.length > 0) {
+            bloodGroupId = bgResult[0]?.bloodgroupid || bgResult[0]?.BloodGroupID;
+        }
+        
+        if (!bloodGroupId) {
+            throw new Error('Invalid blood type: ' + bloodType);
+        }
+
+        const result = await db.execute(sql`
+            INSERT INTO Donor (DonorID, Age, BloodGroupID)
+            VALUES (${userId}, ${age}, ${bloodGroupId})
+            RETURNING *
+        `);
+        
+        return result[0];
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested, registerDonorModel };
