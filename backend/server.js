@@ -15,8 +15,18 @@ import testingRoutes from "./routes/testingRoutes.js";
 const app = express()
 
 app.use(cors())
-app.use(cookies())
 app.use(express.json())
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Invalid JSON payload passed.",
+            details: err.message
+        });
+    }
+    next(err);
+});
+app.use(cookies())
 app.use('/auth', authRoutes)
 app.use('/auth/step', authStepRoutes)
 app.use('/bloodrequest', reqRoutes)
