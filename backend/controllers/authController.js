@@ -70,7 +70,9 @@ export const loginUser = async (req, res) => {
     if (cookie) {
         try {
             if (jwt.verify(cookie, process.env.JWT_SECRET)) {
-                return res.status(200).json({ message: 'Auth Successful' });
+                const decoded = jwt.decode(cookie, process.env.JWT_SECRET);
+                console.log(decoded)
+                return res.status(200).json({ message: 'Auth Successful', user: { role: decoded.role } });
             }
         } catch (err) {
             // continue to email/password login if cookie is invalid
