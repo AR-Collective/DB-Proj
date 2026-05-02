@@ -1,8 +1,10 @@
 import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 const getCompatibleBloodForPatient = async (patientId) => {
     try {
-        return await db.queryClient`SELECT * FROM fn_get_compatible_blood_for_patient(${patientId})`;
+        const result = await db.execute(sql`SELECT * FROM fn_get_compatible_blood_for_patient(${patientId})`);
+        return result;
     } catch (err) {
         throw err;
     }
@@ -10,7 +12,8 @@ const getCompatibleBloodForPatient = async (patientId) => {
 
 const searchPatientByDisease = async (disease) => {
     try {
-        return await db.queryClient`SELECT * FROM fn_search_patients_by_disease(${disease})`;
+        const result = await db.execute(sql`SELECT * FROM fn_search_patients_by_disease(${disease})`);
+        return result;
     } catch (err) {
         throw err;
     }
