@@ -1,9 +1,9 @@
 import express from 'express'
-import { insertBloodRequest, getBloodUnits, getRequestsByHospital, fulfillRequest} from '../controllers/BReqController.js'
-import verifyToken from "../middleware/authMiddleware.js"
+import { insertBloodRequest, getBloodUnits, getRequestsByHospital, fulfillRequest } from '../controllers/BReqController.js'
+import attachToken from "../middleware/authMiddleware.js"
 
 const router = express.Router()
-router.use(verifyToken)
+router.use(attachToken)
 router.post('/insertBReq', insertBloodRequest)
 router.get('/getBU', getBloodUnits)
 router.get('/getReqByHospital', getRequestsByHospital)
