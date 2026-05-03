@@ -1,6 +1,4 @@
 import { registerUserModel, getUserRoles, getUserByEmail, registerDonorModel, registerPatientModel } from '../models/auth.js';
-// import { registerDonorModel } from '../models/donor.js';
-// import { registerPatientModel } from '../models/patient.js';
 import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
