@@ -7,33 +7,87 @@ const HospitalRequestHistory = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const res = await axios.get("/api/hospital/blood/requests", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const loadHistory = async () => {
+    try {
+      setLoading(true);
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const res = await axios.get(`${baseUrl}/bloodrequest/all`, {
+        withCredentials: true,
+      });
 
-        setRequests(res.data.data || []);
-      } catch (err) {
-        console.error("Load history error:", err);
-        toast.error("Failed to load request history");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setRequests(res.data.data || []);
+    } catch (err) {
+      console.error("Load history error:", err);
+      toast.error("Failed to load requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadHistory();
   }, []);
 
+  const handleFulfill = async (requestId) => {
+    // Find the request from loaded data to know required quantity
+    const request = requests.find(r => (r.requestid || r.RequestID) === requestId);
+    const requiredQty = request?.quantity || request?.Quantity || 1;
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+      // Get available matching units for this request
+      const unitsRes = await axios.get(`${baseUrl}/bloodrequest/getBU?breqid=${requestId}`, {
+        withCredentials: true
+      });
+
+      const units = unitsRes.data.data || [];
+
+
+      if (units.length === 0) {
+        toast.error(
+          `No ${request?.bloodtype?.trim() || "matching"} blood units in inventory. Record a donation first.`,
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      // Sum total available quantity across all matching units
+      const totalAvailable = units.reduce((sum, u) => sum + (u.quantity || 1), 0);
+
+      if (totalAvailable < requiredQty) {
+        toast.error(
+          `Not enough stock. Need ${requiredQty} unit(s) but only ${totalAvailable} available.`,
+          { duration: 5000 }
+        );
+        return;
+      }
+
+      // Auto-pick the first compatible unit
+      const unitId = units[0].unitid;
+
+      // Fulfill the request
+      await axios.patch(`${baseUrl}/bloodrequest/fulfillRequest`,
+        { requestid: requestId, unitid: unitId },
+        { withCredentials: true }
+      );
+
+      toast.success("✅ Request fulfilled successfully!");
+      loadHistory();
+    } catch (err) {
+      console.error("Fulfill error:", err);
+      toast.error(err.response?.data?.message || "Failed to fulfill request");
+    }
+  };
+
   const getStatusConfig = (status) => {
     const config = {
-      pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock, label: "Pending" },
-      accepted: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: "Accepted" },
-      rejected: { color: "bg-red-100 text-red-800", icon: XCircle, label: "Rejected" }
+      Pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock, label: "Pending" },
+      Reserved: { color: "bg-blue-100 text-blue-800", icon: Clock, label: "Reserved" },
+      Fulfilled: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: "Fulfilled" },
+      Rejected: { color: "bg-red-100 text-red-800", icon: XCircle, label: "Rejected" }
     };
-    return config[status] || config.pending;
+    return config[status] || config.Pending;
   };
 
   if (loading) {
@@ -53,14 +107,22 @@ const HospitalRequestHistory = () => {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-red-100 rounded-xl">
-              <Calendar className="w-6 h-6 text-red-600" />
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-red-100 rounded-xl">
+                <Calendar className="w-6 h-6 text-red-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800">Request Management</h1>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">Request History</h1>
+            <p className="text-gray-600">View and fulfill patient blood requests</p>
           </div>
-          <p className="text-gray-600">Track your blood request status and history</p>
+          <button
+            onClick={() => window.location.href = "/staff"}
+            className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
+          >
+            Back to Dashboard
+          </button>
         </div>
 
         {/* Stats */}
@@ -71,21 +133,21 @@ const HospitalRequestHistory = () => {
           </div>
           <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-l-yellow-400">
             <div className="text-2xl font-bold text-yellow-600">
-              {requests.filter(r => r.status === "pending").length}
+              {requests.filter(r => r.fulfillmentstatus === "Pending").length}
             </div>
             <div className="text-sm text-gray-600">Pending</div>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-l-green-400">
             <div className="text-2xl font-bold text-green-600">
-              {requests.filter(r => r.status === "accepted").length}
+              {requests.filter(r => r.fulfillmentstatus === "Fulfilled").length}
             </div>
-            <div className="text-sm text-gray-600">Accepted</div>
+            <div className="text-sm text-gray-600">Fulfilled</div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-l-red-400">
-            <div className="text-2xl font-bold text-red-600">
-              {requests.filter(r => r.status === "rejected").length}
+          <div className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-l-blue-400">
+            <div className="text-2xl font-bold text-blue-600">
+              {requests.filter(r => r.fulfillmentstatus === "Reserved").length}
             </div>
-            <div className="text-sm text-gray-600">Rejected</div>
+            <div className="text-sm text-gray-600">Reserved</div>
           </div>
         </div>
 
@@ -102,70 +164,66 @@ const HospitalRequestHistory = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b">
-                    <th className="p-4 text-left font-semibold text-gray-700">Blood Lab</th>
+                    <th className="p-4 text-left font-semibold text-gray-700">Hospital</th>
+                    <th className="p-4 text-left font-semibold text-gray-700">Patient / Disease</th>
                     <th className="p-4 text-left font-semibold text-gray-700">Blood Type</th>
                     <th className="p-4 text-left font-semibold text-gray-700">Units</th>
                     <th className="p-4 text-left font-semibold text-gray-700">Status</th>
                     <th className="p-4 text-left font-semibold text-gray-700">Request Date</th>
-                    <th className="p-4 text-left font-semibold text-gray-700">Processed Date</th>
+                    <th className="p-4 text-left font-semibold text-gray-700">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {requests.map((request) => {
-                    const statusConfig = getStatusConfig(request.status);
+                    const statusConfig = getStatusConfig(request.fulfillmentstatus);
                     const IconComponent = statusConfig.icon;
 
                     return (
-                      <tr key={request._id} className="border-b hover:bg-gray-50 transition-colors">
+                      <tr key={request.requestid} className="border-b hover:bg-gray-50 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                               <span className="font-semibold text-red-600">
-                                {request.labId?.name?.charAt(0) || "L"}
+                                {request.hospitalname?.charAt(0) || "H"}
                               </span>
                             </div>
                             <div>
-                              <div className="font-medium text-gray-800">{request.labId?.name || "Unknown Lab"}</div>
-                              <div className="flex items-center gap-1 text-sm text-gray-500">
-                                <MapPin size={12} />
-                                {request.labId?.address?.city || "Unknown City"}
-                              </div>
+                              <div className="font-medium text-gray-800">{request.hospitalname || "Unknown"}</div>
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
+                          <div className="font-medium text-gray-800">ID: {request.patientid}</div>
+                          <div className="text-sm text-gray-500">{request.patientdisease || "N/A"}</div>
+                        </td>
+                        <td className="p-4">
                           <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
-                            {request.bloodType}
+                            {request.bloodtype?.trim()}
                           </span>
                         </td>
                         <td className="p-4">
-                          <span className="text-lg font-semibold text-gray-800">{request.units}</span>
+                          <span className="text-lg font-semibold text-gray-800">{request.quantity}</span>
                           <span className="text-sm text-gray-500 ml-1">units</span>
                         </td>
                         <td className="p-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${statusConfig.color}`}>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${statusConfig.color} w-max`}>
                             <IconComponent size={14} />
                             {statusConfig.label}
                           </span>
                         </td>
                         <td className="p-4 text-sm text-gray-600">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                          <br />
-                          <span className="text-xs text-gray-400">
-                            {new Date(request.createdAt).toLocaleTimeString()}
-                          </span>
+                          {request.requestdate ? new Date(request.requestdate).toLocaleDateString() : 'N/A'}
                         </td>
-                        <td className="p-4 text-sm text-gray-600">
-                          {request.processedAt ? (
-                            <>
-                              {new Date(request.processedAt).toLocaleDateString()}
-                              <br />
-                              <span className="text-xs text-gray-400">
-                                {new Date(request.processedAt).toLocaleTimeString()}
-                              </span>
-                            </>
+                        <td className="p-4">
+                          {(request.fulfillmentstatus === 'Pending' || request.fulfillmentstatus === 'Reserved') ? (
+                            <button
+                              onClick={() => handleFulfill(request.requestid)}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                            >
+                              Fulfill
+                            </button>
                           ) : (
-                            <span className="text-gray-400">Not processed</span>
+                            <span className="text-gray-400 text-sm">Completed</span>
                           )}
                         </td>
                       </tr>
