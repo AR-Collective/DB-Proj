@@ -14,6 +14,7 @@ import {
   CheckCircle,
   TrendingUp,
   RefreshCw,
+  LogOut,
 } from "lucide-react";
 import axios from "axios";
 
@@ -248,13 +249,26 @@ const StaffDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Staff Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Welcome back! Here's your staff overview.
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Staff Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Welcome back! Here's your staff overview.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem("role");
+              Cookies.remove("auth_token");
+              window.location.href = "/login";
+            }}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
         </div>
 
         {/* Hospital Profile Card */}
