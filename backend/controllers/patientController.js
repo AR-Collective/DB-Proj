@@ -54,7 +54,7 @@ const getBloodGroups = async (req, res) => {
 
         res.status(200).json({
             message: "Blood groups retrieved successfully",
-            data: result
+            data: Array.from(result)
         })
     } catch (error) {
         console.error("Get blood groups error: ", error)
@@ -71,7 +71,7 @@ const getHospitals = async (req, res) => {
 
         res.status(200).json({
             message: "Hospitals retrieved successfully",
-            data: result
+            data: Array.from(result)
         })
     } catch (error) {
         console.error("Get hospitals error: ", error)

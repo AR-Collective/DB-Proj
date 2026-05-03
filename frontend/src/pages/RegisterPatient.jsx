@@ -21,6 +21,7 @@ export default function RegisterPatient() {
     });
     const [bloodGroups, setBloodGroups] = useState([]);
     const [hospitals, setHospitals] = useState([]);
+    const [loadingHospitals, setLoadingHospitals] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -29,6 +30,7 @@ export default function RegisterPatient() {
     useEffect(() => {
         const fetchData = async () => {
             const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+            setLoadingHospitals(true);
             try {
                 const [bgRes, hospRes] = await Promise.allSettled([
                     axios.get(`${baseUrl}/patient/blood-groups`),
@@ -40,12 +42,14 @@ export default function RegisterPatient() {
                 if (hospRes.status === "fulfilled") {
                     const hospData = hospRes.value.data.data || hospRes.value.data || [];
                     console.log("Hospitals loaded:", hospData);
-                    setHospitals(hospData);
+                    setHospitals(Array.isArray(hospData) ? hospData : []);
                 } else if (hospRes.status === "rejected") {
                     console.error("Hospitals fetch failed:", hospRes.reason?.message);
                 }
             } catch (err) {
                 console.error("Fetch error:", err);
+            } finally {
+                setLoadingHospitals(false);
             }
         };
         fetchData();
@@ -377,14 +381,16 @@ export default function RegisterPatient() {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white disabled:opacity-50 disabled:bg-gray-100"
                             >
                                 <option value="">-- Select your hospital --</option>
-                                {hospitals.length > 0 ? (
+                                {loadingHospitals ? (
+                                    <option disabled>Loading hospitals...</option>
+                                ) : hospitals.length > 0 ? (
                                     hospitals.map((h, idx) => (
                                         <option key={idx} value={h.hospitalid}>
                                             {h.name}
                                         </option>
                                     ))
                                 ) : (
-                                    <option disabled>Loading hospitals...</option>
+                                    <option disabled>No hospitals available</option>
                                 )}
                             </select>
                             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
