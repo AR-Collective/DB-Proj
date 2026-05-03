@@ -153,6 +153,7 @@ CREATE TABLE BloodRequest (
         FulfillmentStatus IN (
             'Pending',
             'Fulfilled',
+            'Reserved',
             'Rejected'
         )
     )
