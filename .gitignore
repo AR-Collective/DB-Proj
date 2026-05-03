@@ -6,3 +6,5 @@ backend/.env
 backend/config/db.js
 package-lock.json
 frontend/package-lock.json
+frontend/package.json
+package-lock.json
