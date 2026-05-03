@@ -1,12 +1,13 @@
 import { registerUserModel, getUserRoles, getUserByEmail } from '../models/auth.js';
 import { registerDonorModel } from '../models/donor.js';
+import { registerPatientModel } from '../models/patient.js';
 import generateToken from '../utils/jwt.js';
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../utils/hash_password.js';
 
 const baseRegister = async (req, res, role) => {
     try {
-        const { email, password, firstName, lastName, contact, gender, age, bloodGroup } = req.body;
+        const { email, password, firstName, lastName, contact, gender, age, bloodGroup, disease, hospitalId } = req.body;
 
         if (!email || !password || !firstName || !lastName || !contact) {
             return res.status(400).json({ message: 'Missing required registration fields.' });
@@ -35,6 +36,13 @@ const baseRegister = async (req, res, role) => {
         // Register in Donor table if role is Donor
         if (role === 'Donor') {
             await registerDonorModel(userId, age, bloodGroup);
+        }
+
+        if (role === 'Patient') {
+            if (!age || !bloodGroup || !disease || !hospitalId) {
+                return res.status(400).json({ message: 'Age, blood group, disease, and hospital are required for patient registration.' });
+            }
+            await registerPatientModel(userId, age, bloodGroup, hospitalId, disease);
         }
 
         const roles = await getUserRoles(userId);

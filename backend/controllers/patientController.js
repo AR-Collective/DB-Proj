@@ -1,4 +1,6 @@
-import { getCompatibleBloodForPatient, searchPatientByDisease } from '../models/patient.js'
+import { getCompatibleBloodForPatient, searchPatientByDisease, registerPatientModel } from '../models/patient.js'
+import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 const getCompatibleBlood = async (req, res) => {
     try {
@@ -46,4 +48,38 @@ const searchByDisease = async (req, res) => {
     }
 }
 
-export { getCompatibleBlood, searchByDisease }
+const getBloodGroups = async (req, res) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM BloodGroup ORDER BY BloodType`)
+
+        res.status(200).json({
+            message: "Blood groups retrieved successfully",
+            data: result
+        })
+    } catch (error) {
+        console.error("Get blood groups error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve blood groups",
+            error: error.message
+        })
+    }
+}
+
+const getHospitals = async (req, res) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM Hospital ORDER BY name`)
+
+        res.status(200).json({
+            message: "Hospitals retrieved successfully",
+            data: result
+        })
+    } catch (error) {
+        console.error("Get hospitals error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve hospitals",
+            error: error.message
+        })
+    }
+}
+
+export { getCompatibleBlood, searchByDisease, getBloodGroups, getHospitals }
