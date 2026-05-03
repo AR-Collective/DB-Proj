@@ -130,14 +130,15 @@ $$ LANGUAGE plpgsql;
 
 -- 6. blood demand analytics
 CREATE OR REPLACE VIEW vw_blood_demand_analytics AS
-SELECT b.BloodType, COUNT(br.RequestID) AS DemandCount
+SELECT b.BloodType, SUM(br.Quantity) AS DemandCount
 FROM BloodRequest br
     JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
+WHERE br.FulfillmentStatus = 'Pending'
 GROUP BY
     b.BloodType,
     b.BloodGroupID
 HAVING
-    COUNT(br.RequestID) > 0
+    SUM(br.Quantity) > 0
 ORDER BY DemandCount DESC;
 
 -- 7. availability report by blood type and status
