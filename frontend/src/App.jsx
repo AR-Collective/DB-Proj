@@ -10,27 +10,41 @@ import RegisterPatient from './pages/RegisterPatient.jsx'
 import PatientDashboard from './pages/PatientDashboard.jsx'
 import DonorDashboard from './pages/DonorDashboard.jsx'
 
-const serverUrl = 'http://localhost:3000'
-
 const PrivateRoutes = () => {
   const role = localStorage.getItem("role");
-  return role ? <Outlet /> : <Navigate to="/login" />;
+  return role ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-function Register() {
-  return <></>;
-}
+const PublicRoutes = () => {
+  const role = localStorage.getItem("role");
+
+  const roleRedirects = {
+    patient: '/patient',
+    donor: '/donor'
+  };
+
+  const normalizedRole = role?.toLowerCase();
+
+  if (normalizedRole && roleRedirects[normalizedRole]) {
+    return <Navigate to={roleRedirects[normalizedRole]} replace />;
+  }
+
+  return <Outlet />;
+};
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route element={<PublicRoutes />}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register/donor" element={<RegisterDonor />} />
+        <Route path="/register/patient" element={<RegisterPatient />} />
+      </Route>
+
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/register/donor" element={<RegisterDonor />} />
-      <Route path="/register/patient" element={<RegisterPatient />} />
+
       <Route element={<PrivateRoutes />}>
         <Route path="/patient" element={<PatientDashboard />} />
         <Route path="/donor" element={<DonorDashboard />} />
@@ -40,6 +54,7 @@ function App() {
 }
 
 export default App
+
 
 
 
