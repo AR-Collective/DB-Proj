@@ -1,5 +1,5 @@
 import { getCompatibleBloodForPatient, searchPatientByDisease, registerPatientModel, getBloodGroups as getBloodGroupsModel, getHospitals as getHospitalsModel, getPatientProfile, getPatientRequests } from '../models/patient.js'
-import {newBloodRequest as createBloodRequestModel} from '../models/bloodreq.js'
+import { newBloodRequest as createBloodRequestModel } from '../models/bloodreq.js'
 
 const getCompatibleBlood = async (req, res) => {
     try {
@@ -34,7 +34,7 @@ const getBloodGroups = async (req, res) => {
         const result = await getBloodGroupsModel()
         res.status(200).json({
             message: "Blood groups retrieved successfully",
-            data: result 
+            data: result
         })
     } catch (error) {
         console.error("Get blood groups error: ", error)
@@ -60,9 +60,9 @@ const getMyProfile = async (req, res) => {
         const patientId = req.user?.userid;
         if (!patientId) return res.status(401).json({ message: 'Unauthorized' });
         const result = await getPatientProfile(patientId);
-        if (!result || result.length === 0) 
+        if (!result || result.length === 0)
             return res.status(404).json({
-                message: 'Patient profile not found' 
+                message: 'Patient profile not found'
             });
         res.status(200).json({ message: 'Profile retrieved successfully', data: result[0] });
     } catch (error) {
@@ -74,12 +74,12 @@ const getMyProfile = async (req, res) => {
 const getMyRequests = async (req, res) => {
     try {
         const patientId = req.user?.userid;
-        if (!patientId) 
+        if (!patientId)
             return res.status(401).json({
                 message: 'Unauthorized'
             });
         const result = await getPatientRequests(patientId);
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Requests retrieved successfully',
             data: result
         });
@@ -101,9 +101,9 @@ const createBloodRequest = async (req, res) => {
                 message: 'Missing required fields'
             });
         }
-        await createBloodRequestModel(patientId, hospitalid, bloodgroupid, quantity, patientdisease);
+        await createBloodRequestModel({ patientid: patientId, hospitalid, bloodgroupid, quantity, patientdisease });
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Blood request submitted successfully'
         });
 

@@ -1,4 +1,6 @@
 import { getHospitalVsAvailableStock, getStaffProfile as getStaffProfileModel } from '../models/hospital.js';
+import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 const getHospitalStock = async (req, res) => {
     try {

@@ -40,7 +40,6 @@ const HospitalRequestHistory = () => {
       const unitsRes = await axios.get(`${baseUrl}/bloodrequest/getBU?breqid=${requestId}`, {
         withCredentials: true
       });
-
       const units = unitsRes.data.data || [];
 
 
@@ -67,12 +66,12 @@ const HospitalRequestHistory = () => {
       const unitId = units[0].unitid;
 
       // Fulfill the request
-      await axios.patch(`${baseUrl}/bloodrequest/fulfillRequest`,
+      const fulfillRes = await axios.patch(`${baseUrl}/bloodrequest/fulfillRequest`,
         { requestid: requestId, unitid: unitId },
         { withCredentials: true }
       );
 
-      toast.success("✅ Request fulfilled successfully!");
+      toast.success(" Request fulfilled successfully!");
       loadHistory();
     } catch (err) {
       console.error("Fulfill error:", err);
