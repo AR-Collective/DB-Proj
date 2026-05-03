@@ -15,6 +15,9 @@ import {
   TrendingUp,
   RefreshCw,
   LogOut,
+  PlusCircle,
+  X,
+  Loader2,
 } from "lucide-react";
 import axios from "axios";
 
@@ -32,11 +35,24 @@ const StaffDashboard = () => {
     totalRequests: 0,
   });
 
+  // --- Record Donation Modal state ---
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [donors, setDonors] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [donationForm, setDonationForm] = useState({
+    donorid: "",
+    quantity: 1,
+    expirydate: "",
+    locationid: "",
+  });
+  const [donationLoading, setDonationLoading] = useState(false);
+  const [donationMsg, setDonationMsg] = useState({ type: "", text: "" });
+
   useEffect(() => {
     const fetchHospitalData = async () => {
       setLoading(true);
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || "";
+        const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
         const [profileRes, stockRes, requestsRes] = await Promise.all([
           axios.get(`${baseUrl}/hospital/me`, { withCredentials: true }),
@@ -47,7 +63,7 @@ const StaffDashboard = () => {
         console.log("Data fetched successfully");
 
         const profileData = profileRes.data?.data || profileRes.data;
-        
+
         if (!profileData) {
           throw new Error("No staff data found in response");
         }
@@ -121,6 +137,51 @@ const StaffDashboard = () => {
 
     fetchHospitalData();
   }, []);
+
+  const openDonationModal = async () => {
+    setDonationMsg({ type: "", text: "" });
+    setDonationForm({ donorid: "", quantity: 1, expirydate: "", locationid: "" });
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    try {
+      const [dRes, lRes] = await Promise.all([
+        axios.get(`${baseUrl}/hospital/donors`, { withCredentials: true }),
+        axios.get(`${baseUrl}/hospital/locations`, { withCredentials: true }).catch(() => ({ data: { data: [] } })),
+      ]);
+      setDonors(dRes.data.data || []);
+      setLocations(lRes.data.data || []);
+    } catch (e) {
+      console.error("Failed to load donors", e);
+    }
+    setShowDonationModal(true);
+  };
+
+  const handleDonationSubmit = async (e) => {
+    e.preventDefault();
+    setDonationMsg({ type: "", text: "" });
+    if (!donationForm.donorid || !donationForm.quantity || !donationForm.expirydate || donationForm.locationid === "") {
+      setDonationMsg({ type: "error", text: "All fields are required." });
+      return;
+    }
+    setDonationLoading(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      await axios.post(`${baseUrl}/hospital/record-donation`, {
+        donorid: parseInt(donationForm.donorid),
+        quantity: parseInt(donationForm.quantity),
+        expirydate: donationForm.expirydate,
+        locationid: parseInt(donationForm.locationid),
+      }, { withCredentials: true });
+      setDonationMsg({ type: "success", text: "Donation recorded and blood unit added to inventory!" });
+      setTimeout(() => {
+        setShowDonationModal(false);
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      setDonationMsg({ type: "error", text: err.response?.data?.message || "Failed to record donation." });
+    } finally {
+      setDonationLoading(false);
+    }
+  };
 
   const getLoginHistory = () => {
     if (!hospital?.history) return [];
@@ -246,345 +307,468 @@ const StaffDashboard = () => {
   const recentActivity = getRecentActivity();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-white p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Staff Dashboard
-            </h1>
-            <p className="text-gray-600">
-              Welcome back! Here's your staff overview.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem("role");
-              Cookies.remove("auth_token");
-              window.location.href = "/login";
-            }}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </div>
-
-        {/* Hospital Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            <div className="bg-red-100 p-4 rounded-xl">
-              <Building2 className="text-red-600 w-8 h-8" />
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-white p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Staff Dashboard
+              </h1>
+              <p className="text-gray-600">
+                Welcome back! Here's your staff overview.
+              </p>
             </div>
+            <div className="flex gap-4">
+              <button
+                onClick={openDonationModal}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
+              >
+                <PlusCircle size={18} />
+                Record Donation
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = "/staff/requests";
+                }}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
+              >
+                <Activity size={18} />
+                Manage Requests
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("role");
+                  Cookies.remove("auth_token");
+                  window.location.href = "/login";
+                }}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </div>
+          </div>
 
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Hospital Profile Card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6 mb-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+              <div className="bg-red-100 p-4 rounded-xl">
+                <Building2 className="text-red-600 w-8 h-8" />
+              </div>
+
+              <div className="flex-1">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-800">
+                      {hospital.name}
+                    </h2>
+                    <p className="text-gray-500">{hospital.email}</p>
+
+                    <div className="flex flex-wrap gap-4 mt-3">
+                      <p className="text-gray-600 flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-red-500" />
+                        {hospital.address}
+                      </p>
+
+                      <p className="text-gray-600 flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-red-500" />
+                        {hospital.phone}
+                      </p>
+
+                      <p className="text-gray-600">
+                        Shift:{" "}
+                        <span className="font-medium">{hospital.category}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-center md:text-right">
+                    <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                      <Users size={14} />
+                      {hospital.type?.toUpperCase() || "STAFF"}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Last Login:{" "}
+                      {hospital.lastLogin
+                        ? new Date(hospital.lastLogin).toLocaleString()
+                        : "Never"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-blue-400">
+              <div className="flex items-center gap-3">
+                <Droplet className="w-8 h-8 text-blue-600" />
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-800">
-                    {hospital.name}
-                  </h2>
-                  <p className="text-gray-500">{hospital.email}</p>
-
-                  <div className="flex flex-wrap gap-4 mt-3">
-                    <p className="text-gray-600 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-red-500" />
-                      {hospital.address}
-                    </p>
-
-                    <p className="text-gray-600 flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-red-500" />
-                      {hospital.phone}
-                    </p>
-
-                    <p className="text-gray-600">
-                      Shift:{" "}
-                      <span className="font-medium">{hospital.category}</span>
-                    </p>
+                  <div className="text-2xl font-bold text-gray-800">
+                    {stats.totalUnits}
                   </div>
+                  <div className="text-sm text-gray-600">Total Blood Units</div>
                 </div>
+              </div>
+            </div>
 
-                <div className="text-center md:text-right">
-                  <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                    <Users size={14} />
-                    {hospital.type?.toUpperCase() || "STAFF"}
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-green-400">
+              <div className="flex items-center gap-3">
+                <Activity className="w-8 h-8 text-green-600" />
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {bloodStock.length}
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Last Login:{" "}
-                    {hospital.lastLogin
-                      ? new Date(hospital.lastLogin).toLocaleString()
-                      : "Never"}
+                  <div className="text-sm text-gray-600">Blood Types</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-yellow-400">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {stats.lowStock}
+                  </div>
+                  <div className="text-sm text-gray-600">Low Stock</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-red-400">
+              <div className="flex items-center gap-3">
+                <Clock className="w-8 h-8 text-red-600" />
+                <div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {stats.expiringSoon}
+                  </div>
+                  <div className="text-sm text-gray-600">Expiring Soon</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-purple-400">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-8 h-8 text-purple-600" />
+                <div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {stats.pendingRequests}
+                  </div>
+                  <div className="text-sm text-gray-600">Pending Requests</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Blood Inventory Overview */}
+            <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Droplet className="w-5 h-5 text-red-600" />
+                Blood Inventory
+              </h3>
+
+              {bloodStock.length === 0 ? (
+                <div className="text-center py-8">
+                  <Droplet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 mb-4">
+                    No blood inventory available
                   </p>
+                  <button
+                    onClick={() =>
+                      (window.location.href = "/hospital/request-blood")
+                    }
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                  >
+                    Request Blood
+                  </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              ) : (
+                <div className="space-y-3">
+                  {bloodStock.slice(0, 6).map((item) => {
+                    const status = getStockStatus(item.quantity, item.expiryDate);
+                    const StatusIcon = status.icon;
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-blue-400">
-            <div className="flex items-center gap-3">
-              <Droplet className="w-8 h-8 text-blue-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-800">
-                  {stats.totalUnits}
+                    return (
+                      <div
+                        key={item._id}
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${getBloodTypeColor(item.bloodGroup)}`}
+                          >
+                            {item.bloodGroup}
+                          </span>
+                          <span className="text-lg font-semibold">
+                            {item.quantity} units
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusIcon
+                            size={16}
+                            className={
+                              status.color.replace("bg-", "text-").split(" ")[0]
+                            }
+                          />
+                          <span className="text-sm text-gray-600 capitalize">
+                            {status.status}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {bloodStock.length > 6 && (
+                    <button
+                      onClick={() =>
+                        (window.location.href = "/hospital/blood-stock")
+                      }
+                      className="w-full text-center text-red-600 hover:text-red-700 py-2 border border-dashed border-gray-300 rounded-lg"
+                    >
+                      View All {bloodStock.length} Blood Types
+                    </button>
+                  )}
                 </div>
-                <div className="text-sm text-gray-600">Total Blood Units</div>
-              </div>
+              )}
             </div>
-          </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-green-400">
-            <div className="flex items-center gap-3">
-              <Activity className="w-8 h-8 text-green-600" />
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  {bloodStock.length}
+            {/* Recent Requests */}
+            <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-red-600" />
+                Recent Blood Requests
+              </h3>
+
+              {requests.length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">No blood requests yet</p>
                 </div>
-                <div className="text-sm text-gray-600">Blood Types</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-yellow-400">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-8 h-8 text-yellow-600" />
-              <div>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {stats.lowStock}
-                </div>
-                <div className="text-sm text-gray-600">Low Stock</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-red-400">
-            <div className="flex items-center gap-3">
-              <Clock className="w-8 h-8 text-red-600" />
-              <div>
-                <div className="text-2xl font-bold text-red-600">
-                  {stats.expiringSoon}
-                </div>
-                <div className="text-sm text-gray-600">Expiring Soon</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-l-purple-400">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-purple-600" />
-              <div>
-                <div className="text-2xl font-bold text-purple-600">
-                  {stats.pendingRequests}
-                </div>
-                <div className="text-sm text-gray-600">Pending Requests</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Blood Inventory Overview */}
-          <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Droplet className="w-5 h-5 text-red-600" />
-              Blood Inventory
-            </h3>
-
-            {bloodStock.length === 0 ? (
-              <div className="text-center py-8">
-                <Droplet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 mb-4">
-                  No blood inventory available
-                </p>
-                <button
-                  onClick={() =>
-                    (window.location.href = "/hospital/request-blood")
-                  }
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-                >
-                  Request Blood
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {bloodStock.slice(0, 6).map((item) => {
-                  const status = getStockStatus(item.quantity, item.expiryDate);
-                  const StatusIcon = status.icon;
-
-                  return (
+              ) : (
+                <div className="space-y-3">
+                  {requests.slice(0, 5).map((request) => (
                     <div
-                      key={item._id}
+                      key={request._id}
                       className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${getBloodTypeColor(item.bloodGroup)}`}
-                        >
-                          {item.bloodGroup}
-                        </span>
-                        <span className="text-lg font-semibold">
-                          {item.quantity} units
-                        </span>
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {request.bloodType}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {request.units} units •{" "}
+                          {request.labId?.name || "Unknown Lab"}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <StatusIcon
-                          size={16}
-                          className={
-                            status.color.replace("bg-", "text-").split(" ")[0]
-                          }
-                        />
-                        <span className="text-sm text-gray-600 capitalize">
-                          {status.status}
-                        </span>
-                      </div>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${request.status === "accepted"
+                          ? "bg-green-100 text-green-800"
+                          : request.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                          }`}
+                      >
+                        {request.status}
+                      </span>
                     </div>
-                  );
-                })}
+                  ))}
 
-                {bloodStock.length > 6 && (
-                  <button
-                    onClick={() =>
-                      (window.location.href = "/hospital/blood-stock")
-                    }
-                    className="w-full text-center text-red-600 hover:text-red-700 py-2 border border-dashed border-gray-300 rounded-lg"
-                  >
-                    View All {bloodStock.length} Blood Types
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Recent Requests */}
-          <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-red-600" />
-              Recent Blood Requests
-            </h3>
-
-            {requests.length === 0 ? (
-              <div className="text-center py-8">
-                <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No blood requests yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {requests.slice(0, 5).map((request) => (
-                  <div
-                    key={request._id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                  >
-                    <div>
-                      <div className="font-medium text-gray-800">
-                        {request.bloodType}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {request.units} units •{" "}
-                        {request.labId?.name || "Unknown Lab"}
-                      </div>
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${request.status === "accepted"
-                        ? "bg-green-100 text-green-800"
-                        : request.status === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                        }`}
+                  {requests.length > 5 && (
+                    <button
+                      onClick={() =>
+                        (window.location.href = "/hospital/request-history")
+                      }
+                      className="w-full text-center text-red-600 hover:text-red-700 py-2 border border-dashed border-gray-300 rounded-lg"
                     >
-                      {request.status}
-                    </span>
-                  </div>
-                ))}
-
-                {requests.length > 5 && (
-                  <button
-                    onClick={() =>
-                      (window.location.href = "/hospital/request-history")
-                    }
-                    className="w-full text-center text-red-600 hover:text-red-700 py-2 border border-dashed border-gray-300 rounded-lg"
-                  >
-                    View All {requests.length} Requests
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Login History */}
-          <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-red-600" />
-              Recent Logins
-            </h3>
-
-            {loginHistory.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                No login history available
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {loginHistory.map((login, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                  >
-                    <div>
-                      <div className="font-medium text-gray-800">
-                        {login.ip}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {new Date(login.date).toLocaleString()}
-                      </div>
-                    </div>
-                    <CheckCircle size={16} className="text-green-600" />
-                  </div>
-                ))}
-              </div>
-            )}
+                      View All {requests.length} Requests
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <History className="w-5 h-5 text-red-600" />
-              Recent Activity
-            </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Login History */}
+            <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-red-600" />
+                Recent Logins
+              </h3>
 
-            {recentActivity.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                No recent activity
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {recentActivity.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="p-3 border border-gray-200 rounded-lg"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-gray-800 capitalize">
-                        {activity.eventType?.toLowerCase().replace("_", " ")}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(activity.date).toLocaleDateString()}
-                      </span>
+              {loginHistory.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">
+                  No login history available
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {loginHistory.map((login, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {login.ip}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(login.date).toLocaleString()}
+                        </div>
+                      </div>
+                      <CheckCircle size={16} className="text-green-600" />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {activity.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <History className="w-5 h-5 text-red-600" />
+                Recent Activity
+              </h3>
+
+              {recentActivity.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">
+                  No recent activity
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivity.map((activity, index) => (
+                    <div
+                      key={index}
+                      className="p-3 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-gray-800 capitalize">
+                          {activity.eventType?.toLowerCase().replace("_", " ")}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(activity.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {activity.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+
+      {/* ── Record Donation Modal ── */}
+      {showDonationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+            <button
+              onClick={() => setShowDonationModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-100 p-2 rounded-xl">
+                <PlusCircle className="text-green-600 w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Record Donation</h2>
+                <p className="text-sm text-gray-500">Log a physical donation & add to inventory</p>
+              </div>
+            </div>
+
+            {donationMsg.text && (
+              <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium ${donationMsg.type === "success"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+                }`}>
+                {donationMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleDonationSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Donor <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={donationForm.donorid}
+                  onChange={e => setDonationForm({ ...donationForm, donorid: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none"
+                >
+                  <option value="">— Select donor —</option>
+                  {donors.map(d => (
+                    <option key={d.donorid} value={d.donorid}>
+                      {d.firstname} {d.lastname} — {d.bloodtype?.trim()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity (units) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number" min="1" max="10"
+                  value={donationForm.quantity}
+                  onChange={e => setDonationForm({ ...donationForm, quantity: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Blood Unit Expiry Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={donationForm.expirydate}
+                  onChange={e => setDonationForm({ ...donationForm, expirydate: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Storage Location ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number" min="0"
+                  placeholder="e.g. 1"
+                  value={donationForm.locationid}
+                  onChange={e => setDonationForm({ ...donationForm, locationid: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">Use LocationID from your StorageLocation table</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={donationLoading}
+                className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {donationLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Recording...</>
+                ) : (
+                  <><PlusCircle className="w-4 h-4" /> Record Donation</>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>);
 };
 
 export default StaffDashboard;
