@@ -175,4 +175,83 @@ const getMyDonationHistory = async (req, res) => {
     }
 };
 
-export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups, getMyDonorProfile, getMyDonationHistory }
+const getMatchingRequests = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const donorResult = await db.execute(sql`
+            SELECT b.BloodGroupID
+            FROM Donor d
+            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID = ${donorId}
+        `);
+        if (!donorResult || donorResult.length === 0) {
+            return res.status(404).json({ message: 'Donor not found' });
+        }
+        const bloodGroupId = donorResult[0].bloodgroupid;
+
+        const result = await db.execute(sql`
+            SELECT
+                br.RequestID,
+                br.Quantity,
+                br.PatientDisease,
+                br.RequestDate,
+                br.FulfillmentStatus,
+                b.BloodType,
+                h.Name       AS HospitalName,
+                h.Location   AS HospitalLocation,
+                ua.FirstName AS PatientFirstName,
+                ua.LastName  AS PatientLastName
+            FROM BloodRequest br
+            JOIN BloodGroup  b  ON br.BloodGroupID = b.BloodGroupID
+            JOIN Hospital    h  ON br.HospitalID   = h.HospitalID
+            JOIN Patient     p  ON br.PatientID    = p.PatientID
+            JOIN UserAccount ua ON p.PatientID     = ua.UserID
+            WHERE br.BloodGroupID = ${bloodGroupId}
+              AND br.FulfillmentStatus = 'Pending'
+            ORDER BY br.RequestDate DESC
+        `);
+
+        res.status(200).json({
+            message: 'Matching requests retrieved successfully',
+            data: Array.from(result)
+        });
+    } catch (error) {
+        console.error('Get matching requests error:', error);
+        res.status(500).json({ message: 'Failed to retrieve requests', error: error.message });
+    }
+};
+
+const reserveRequest = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const { requestId } = req.body;
+        if (!requestId) return res.status(400).json({ message: 'requestId is required' });
+
+        const check = await db.execute(sql`
+            SELECT FulfillmentStatus FROM BloodRequest WHERE RequestID = ${requestId}
+        `);
+        if (!check || check.length === 0) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+        if (check[0].fulfillmentstatus !== 'Pending') {
+            return res.status(409).json({ message: 'This request is no longer available' });
+        }
+
+        await db.execute(sql`
+            UPDATE BloodRequest SET FulfillmentStatus = 'Reserved' WHERE RequestID = ${requestId}
+        `);
+
+        res.status(200).json({
+            message: 'You have pledged to donate for this request. Please visit the hospital to complete your donation.'
+        });
+    } catch (error) {
+        console.error('Reserve request error:', error);
+        res.status(500).json({ message: 'Failed to reserve request', error: error.message });
+    }
+};
+
+export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups, getMyDonorProfile, getMyDonationHistory, getMatchingRequests, reserveRequest }

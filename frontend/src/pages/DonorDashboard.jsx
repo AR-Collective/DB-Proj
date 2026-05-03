@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
-    Droplets, User, History, Search, LogOut,
+    Droplets, User, History, LogOut,
     Activity, Star, Heart, ChevronRight,
-    AlertCircle, Loader2, CheckCircle2, Calendar,
-    Beaker, Award
+    AlertCircle, Loader2, Calendar,
+    Award, ClipboardList, CheckCircle2, Hospital
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -34,16 +34,20 @@ export default function DonorDashboard() {
     const [activeTab, setActiveTab] = useState("overview");
     const [profile, setProfile] = useState(null);
     const [history, setHistory] = useState([]);
-    const [searchResults, setSearchResults] = useState([]);
+    const [matchingRequests, setMatchingRequests] = useState([]);
     const [bloodGroups, setBloodGroups] = useState([]);
-    const [searchBT, setSearchBT] = useState("");
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingHistory, setLoadingHistory] = useState(false);
-    const [loadingSearch, setLoadingSearch] = useState(false);
+    const [loadingRequests, setLoadingRequests] = useState(false);
+    const [reservingId, setReservingId] = useState(null);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-    useEffect(() => { fetchProfile(); fetchBloodGroups(); }, []);
-    useEffect(() => { if (activeTab === "history") fetchHistory(); }, [activeTab]);
+    useEffect(() => { fetchProfile(); }, []);
+    useEffect(() => {
+        if (activeTab === "history") fetchHistory();
+        if (activeTab === "requests") fetchMatchingRequests();
+    }, [activeTab]);
 
     const fetchProfile = async () => {
         setLoadingProfile(true);
@@ -69,33 +73,39 @@ export default function DonorDashboard() {
         }
     };
 
-    const fetchBloodGroups = async () => {
+    const fetchMatchingRequests = async () => {
+        setLoadingRequests(true);
         try {
-            const res = await axios.get(`${API}/donor/blood-groups`);
-            setBloodGroups(res.data.data || []);
-        } catch {}
+            const res = await axios.get(`${API}/donor/matching-requests`, authHeaders());
+            setMatchingRequests(res.data.data || []);
+        } catch {
+            setError("Failed to load matching requests.");
+        } finally {
+            setLoadingRequests(false);
+        }
     };
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!searchBT) return;
-        setLoadingSearch(true); setError("");
+    const handleReserve = async (requestId) => {
+        setReservingId(requestId);
+        setError(""); setSuccess("");
         try {
-            const res = await axios.post(`${API}/donor/search`, { bloodtype: searchBT }, authHeaders());
-            setSearchResults(Array.from(res.data.data || []));
-        } catch {
-            setError("Search failed.");
+            const res = await axios.post(`${API}/donor/reserve-request`, { requestId }, authHeaders());
+            setSuccess(res.data.message);
+            // Remove the reserved request from the list
+            setMatchingRequests(prev => prev.filter(r => r.requestid !== requestId));
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to reserve request.");
         } finally {
-            setLoadingSearch(false);
+            setReservingId(null);
         }
     };
 
     const handleLogout = () => { localStorage.clear(); navigate("/login", { replace: true }); };
 
     const tabs = [
-        { id: "overview", label: "Overview",         icon: Activity },
-        { id: "history",  label: "Donation History", icon: History },
-        { id: "search",   label: "Search Donors",    icon: Search },
+        { id: "overview", label: "Overview", icon: Activity },
+        { id: "history", label: "Donation History", icon: History },
+        { id: "requests", label: "Current Requests", icon: ClipboardList },
     ];
 
     const totalDonations = history.length;
@@ -204,9 +214,9 @@ export default function DonorDashboard() {
                                         </div>
                                         <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {[
-                                                { label: "Contact",  value: profile.contact },
-                                                { label: "Gender",   value: profile.gender === "M" ? "Male" : "Female" },
-                                                { label: "Age",      value: `${profile.age} years` },
+                                                { label: "Contact", value: profile.contact },
+                                                { label: "Gender", value: profile.gender === "M" ? "Male" : "Female" },
+                                                { label: "Age", value: `${profile.age} years` },
                                             ].map(({ label, value }) => (
                                                 <div key={label}>
                                                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{label}</p>
@@ -223,9 +233,9 @@ export default function DonorDashboard() {
                                     {/* Stats */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {[
-                                            { label: "Total Donations", value: totalDonations || "—", icon: History,  color: "blue" },
-                                            { label: "Units Donated",   value: totalUnits || "—",     icon: Droplets, color: "red" },
-                                            { label: "Last Donation",   value: lastDonation || "None",icon: Calendar, color: "green", small: true },
+                                            { label: "Total Donations", value: totalDonations || "—", icon: History, color: "blue" },
+                                            { label: "Units Donated", value: totalUnits || "—", icon: Droplets, color: "red" },
+                                            { label: "Last Donation", value: lastDonation || "None", icon: Calendar, color: "green", small: true },
                                         ].map(({ label, value, icon: Icon, color, small }) => (
                                             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
                                                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center bg-${color}-50`}>
@@ -245,7 +255,7 @@ export default function DonorDashboard() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {[
                                                 { label: "View Donation History", icon: History, tab: "history", color: "blue" },
-                                                { label: "Search Donors by Blood Type", icon: Search, tab: "search", color: "green" },
+                                                { label: "See Matching Blood Requests", icon: ClipboardList, tab: "requests", color: "red" },
                                             ].map(({ label, icon: Icon, tab, color }) => (
                                                 <button key={tab} onClick={() => setActiveTab(tab)}
                                                     className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border border-${color}-100 bg-${color}-50 text-${color}-700 hover:bg-${color}-100 transition-colors font-medium text-sm`}>
@@ -325,55 +335,70 @@ export default function DonorDashboard() {
                         </div>
                     )}
 
-                    {/* SEARCH DONORS */}
-                    {activeTab === "search" && (
-                        <div className="space-y-5">
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                                <h2 className="font-semibold text-gray-900 text-lg mb-1">Search Donors by Blood Type</h2>
-                                <p className="text-sm text-gray-500 mb-5">Find other registered donors matching a specific blood type</p>
-                                <form onSubmit={handleSearch} className="flex gap-3">
-                                    <select value={searchBT} onChange={e => setSearchBT(e.target.value)}
-                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent bg-white outline-none transition">
-                                        <option value="">— Select blood type —</option>
-                                        {bloodGroups.map((bg, i) => (
-                                            <option key={i} value={bg.bloodtype?.trim()}>{bg.bloodtype?.trim()}</option>
-                                        ))}
-                                    </select>
-                                    <button type="submit" disabled={loadingSearch || !searchBT}
-                                        className="px-5 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold text-sm hover:from-red-600 hover:to-rose-700 transition-all shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                                        {loadingSearch ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                                        Search
-                                    </button>
-                                </form>
+                    {/* CURRENT REQUESTS */}
+                    {activeTab === "requests" && (
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <h2 className="font-semibold text-gray-900 text-lg">Blood Requests Matching Your Type</h2>
+                                    <p className="text-sm text-gray-500 mt-0.5">Patients in need of your blood type — click "I'll Donate" to commit</p>
+                                </div>
+                                <button onClick={fetchMatchingRequests} className="text-sm text-red-600 hover:text-red-700 font-medium">Refresh</button>
                             </div>
 
-                            {searchResults.length > 0 && (
-                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                                        <h3 className="font-semibold text-gray-900">Results</h3>
-                                        <span className="text-sm text-gray-500">{searchResults.length} donor{searchResults.length !== 1 ? "s" : ""} found</span>
-                                    </div>
-                                    <div className="divide-y divide-gray-50">
-                                        {searchResults.map((d, i) => (
-                                            <div key={i} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-                                                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                                                    <User className="w-5 h-5 text-red-500" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-semibold text-gray-900 text-sm">{d.name}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">
-                                                        {d.gender === "M" ? "Male" : "Female"} · Age {d.age} · {d.contact}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right flex-shrink-0">
-                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                                                        {d.bloodtype?.trim()}
-                                                    </span>
-                                                    <div className="mt-1"><StarRating rating={d.rating} /></div>
-                                                </div>
+                            {success && (
+                                <div className="mx-6 mt-4 bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+                                    <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <p className="text-sm text-green-700">{success}</p>
+                                </div>
+                            )}
+
+                            {loadingRequests ? (
+                                <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-red-500" /></div>
+                            ) : matchingRequests.length === 0 ? (
+                                <div className="flex flex-col items-center py-16 gap-3 text-gray-400">
+                                    <ClipboardList className="w-12 h-12" />
+                                    <p className="text-sm font-medium">No pending requests match your blood type</p>
+                                    <p className="text-xs">Check back later — new requests appear here in real time</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-50">
+                                    {matchingRequests.map((r) => (
+                                        <div key={r.requestid} className="px-6 py-5 flex flex-wrap items-start gap-4 hover:bg-gray-50 transition-colors">
+                                            <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <Droplets className="w-5 h-5 text-red-500" />
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                    <span className="font-semibold text-gray-900 text-sm">
+                                                        {r.patientfirstname} {r.patientlastname}
+                                                    </span>
+                                                    <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-red-100 text-red-700 border border-red-200">
+                                                        {r.bloodtype?.trim()} · {r.quantity} unit{r.quantity !== 1 ? "s" : ""}
+                                                    </span>
+                                                    <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                                        Urgent
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500">
+                                                    <Hospital className="w-3 h-3 inline mr-1" />
+                                                    {r.hospitalname} — {r.hospitallocation}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    Condition: <span className="font-medium text-gray-700">{r.patientdisease}</span>
+                                                    &nbsp;·&nbsp; Requested: {r.requestdate ? new Date(r.requestdate).toLocaleDateString() : "—"}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleReserve(r.requestid)}
+                                                disabled={reservingId === r.requestid}
+                                                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl text-sm font-semibold hover:from-red-600 hover:to-rose-700 transition-all shadow disabled:opacity-60 disabled:cursor-not-allowed">
+                                                {reservingId === r.requestid
+                                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                                                    : <><Heart className="w-3.5 h-3.5" /> I'll Donate</>}
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>

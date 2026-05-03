@@ -1,7 +1,6 @@
 import { getCompatibleBloodForPatient, searchPatientByDisease, registerPatientModel } from '../models/patient.js'
 import db from '../config/db.js';
 import { sql } from 'drizzle-orm';
-import jwt from 'jsonwebtoken';
 
 const getCompatibleBlood = async (req, res) => {
     try {
