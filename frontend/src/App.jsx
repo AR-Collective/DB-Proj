@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import './App.css'
 import Login from './views/Login.jsx'
-import Landing from './pages/Landing.jsx'
-import About from './pages/About.jsx'
-import Contact from './pages/Contact.jsx'
-import RegisterDonor from './pages/RegisterDonor.jsx'
-import RegisterPatient from './pages/RegisterPatient.jsx'
-import PatientDashboard from './pages/PatientDashboard.jsx'
-import DonorDashboard from './pages/DonorDashboard.jsx'
+import Landing from './views/Landing.jsx'
+import About from './views/About.jsx'
+import Contact from './views/Contact.jsx'
+import RegisterDonor from './views/RegisterDonor.jsx'
+import RegisterPatient from './views/RegisterPatient.jsx'
+import PatientDashboard from './views/PatientDashboard.jsx'
+import DonorDashboard from './views/DonorDashboard.jsx'
+import StaffDashboard from './pages/hospital/HospitalDashboard.jsx'
 
 const PrivateRoutes = () => {
   const role = localStorage.getItem("role");
@@ -20,13 +21,13 @@ const PublicRoutes = () => {
 
   const roleRedirects = {
     patient: '/patient',
-    donor: '/donor'
+    donor: '/donor',
+    staff: '/staff'
   };
 
-  const normalizedRole = role?.toLowerCase();
 
-  if (normalizedRole && roleRedirects[normalizedRole]) {
-    return <Navigate to={roleRedirects[normalizedRole]} replace />;
+  if (role && roleRedirects[role]) {
+    return <Navigate to={roleRedirects[role]} replace />;
   }
 
   return <Outlet />;
@@ -48,6 +49,7 @@ function App() {
       <Route element={<PrivateRoutes />}>
         <Route path="/patient" element={<PatientDashboard />} />
         <Route path="/donor" element={<DonorDashboard />} />
+        <Route path="/staff" element={<StaffDashboard />} />
       </Route>
     </Routes>
   );

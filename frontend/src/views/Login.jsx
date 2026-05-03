@@ -48,13 +48,13 @@ export default function Login() {
 			// Persist session
 			localStorage.setItem("auth_token", token);
 			localStorage.setItem("user", JSON.stringify(user));
-			localStorage.setItem("role", role);
+			localStorage.setItem("role", role.toLowerCase());
 
 			const endpoints = {
-				Donor:   "/donor",
-				Staff:   "/staff",
+				Donor: "/donor",
+				Staff: "/staff",
 				Patient: "/patient",
-				Admin:   "/admin",
+				Admin: "/admin",
 				unknown: "/login",
 			};
 
