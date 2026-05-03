@@ -101,6 +101,8 @@ FROM
     StorageLocation sl
     JOIN BloodUnit bu ON sl.LocationID = bu.LocationID
     JOIN BloodGroup b ON bu.BloodGroupID = b.BloodGroupID
+WHERE 
+    LOWER(TRIM(bu.Status)) IN ('available', 'reserved') -- Updated to include both statuses
 GROUP BY
     sl.LocationID,
     sl.LocationName,
