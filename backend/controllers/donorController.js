@@ -1,4 +1,6 @@
 import { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested } from '../models/donor.js'
+import db from '../config/db.js';
+import { sql } from 'drizzle-orm';
 
 const searchDonors = async (req, res) => {
     try {
@@ -106,4 +108,150 @@ const getNeverTested = async (req, res) => {
     }
 }
 
-export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested }
+const getBloodGroups = async (req, res) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM BloodGroup ORDER BY BloodType`)
+
+        res.status(200).json({
+            message: "Blood groups retrieved successfully",
+            data: result
+        })
+    } catch (error) {
+        console.error("Get blood groups error: ", error)
+        res.status(500).json({
+            message: "Failed to retrieve blood groups",
+            error: error.message
+        })
+    }
+}
+
+const getMyDonorProfile = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const result = await db.execute(sql`
+            SELECT
+                d.DonorID,
+                ua.FirstName,
+                ua.LastName,
+                ua.Email,
+                ua.Contact,
+                ua.Gender,
+                d.Age,
+                d.Rating,
+                b.BloodType
+            FROM Donor d
+            JOIN UserAccount ua ON d.DonorID = ua.UserID
+            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID = ${donorId}
+        `);
+
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Donor profile not found' });
+        }
+
+        res.status(200).json({ message: 'Profile retrieved successfully', data: result[0] });
+    } catch (error) {
+        console.error('Get donor profile error:', error);
+        res.status(500).json({ message: 'Failed to retrieve profile', error: error.message });
+    }
+};
+
+const getMyDonationHistory = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const result = await db.execute(sql`SELECT * FROM fn_get_donor_history(${donorId})`);
+
+        res.status(200).json({
+            message: 'Donation history retrieved successfully',
+            data: Array.from(result)
+        });
+    } catch (error) {
+        console.error('Get donation history error:', error);
+        res.status(500).json({ message: 'Failed to retrieve history', error: error.message });
+    }
+};
+
+const getMatchingRequests = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const donorResult = await db.execute(sql`
+            SELECT b.BloodGroupID
+            FROM Donor d
+            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID = ${donorId}
+        `);
+        if (!donorResult || donorResult.length === 0) {
+            return res.status(404).json({ message: 'Donor not found' });
+        }
+        const bloodGroupId = donorResult[0].bloodgroupid;
+
+        const result = await db.execute(sql`
+            SELECT
+                br.RequestID,
+                br.Quantity,
+                br.PatientDisease,
+                br.RequestDate,
+                br.FulfillmentStatus,
+                b.BloodType,
+                h.Name       AS HospitalName,
+                h.Location   AS HospitalLocation,
+                ua.FirstName AS PatientFirstName,
+                ua.LastName  AS PatientLastName
+            FROM BloodRequest br
+            JOIN BloodGroup  b  ON br.BloodGroupID = b.BloodGroupID
+            JOIN Hospital    h  ON br.HospitalID   = h.HospitalID
+            JOIN Patient     p  ON br.PatientID    = p.PatientID
+            JOIN UserAccount ua ON p.PatientID     = ua.UserID
+            WHERE br.BloodGroupID = ${bloodGroupId}
+              AND br.FulfillmentStatus = 'Pending'
+            ORDER BY br.RequestDate DESC
+        `);
+
+        res.status(200).json({
+            message: 'Matching requests retrieved successfully',
+            data: Array.from(result)
+        });
+    } catch (error) {
+        console.error('Get matching requests error:', error);
+        res.status(500).json({ message: 'Failed to retrieve requests', error: error.message });
+    }
+};
+
+const reserveRequest = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const { requestId } = req.body;
+        if (!requestId) return res.status(400).json({ message: 'requestId is required' });
+
+        const check = await db.execute(sql`
+            SELECT FulfillmentStatus FROM BloodRequest WHERE RequestID = ${requestId}
+        `);
+        if (!check || check.length === 0) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+        if (check[0].fulfillmentstatus !== 'Pending') {
+            return res.status(409).json({ message: 'This request is no longer available' });
+        }
+
+        await db.execute(sql`
+            UPDATE BloodRequest SET FulfillmentStatus = 'Reserved' WHERE RequestID = ${requestId}
+        `);
+
+        res.status(200).json({
+            message: 'You have pledged to donate for this request. Please visit the hospital to complete your donation.'
+        });
+    } catch (error) {
+        console.error('Reserve request error:', error);
+        res.status(500).json({ message: 'Failed to reserve request', error: error.message });
+    }
+};
+
+export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups, getMyDonorProfile, getMyDonationHistory, getMatchingRequests, reserveRequest }

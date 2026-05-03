@@ -46,4 +46,5 @@ const getDonorsNeverTested = async () => {
     }
 };
 
+
 export { searchDonorByBloodType, getDonorHistory, updateDonorRating, getAverageDonationsPerDonor, getDonorsNeverTested };

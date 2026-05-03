@@ -480,6 +480,52 @@ return return_user ;
 END;
 $$;
 
+
+CREATE OR REPLACE FUNCTION fn_add_donor(
+p_fname VARCHAR, p_lname VARCHAR, p_email VARCHAR, p_password VARCHAR,p_contact VARCHAR, p_gender bpchar(1), p_last_login TIMESTAMP, 
+p_Age INT, p_blood_group_id INT
+)
+RETURNS UserAccount
+LANGUAGE plpgsql AS $$
+DECLARE return_user useraccount;
+BEGIN
+Select * from fn_add_user_wth_role(
+p_fname , p_lname , p_email , p_password ,p_contact , p_gender , p_last_login, 'Donor'::VARCHAR) INTO return_user;
+            INSERT INTO Donor (DonorID, Age, BloodGroupID)
+            VALUES (return_user.userid, p_Age, p_blood_group_id);
+return return_user ;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_add_patient(
+    p_fname VARCHAR, 
+    p_lname VARCHAR, 
+    p_email VARCHAR, 
+    p_password VARCHAR,
+    p_contact VARCHAR, 
+    p_gender bpchar(1), 
+    p_last_login TIMESTAMP, 
+    p_Age INT, 
+    p_blood_group_id INT,
+    p_hospital_id INT,
+    p_disease VARCHAR
+)
+RETURNS UserAccount
+LANGUAGE plpgsql AS $$
+DECLARE return_user useraccount;
+BEGIN
+    SELECT * FROM fn_add_user_wth_role(
+        p_fname, p_lname, p_email, p_password, p_contact, p_gender, p_last_login, 'Patient'::VARCHAR
+    ) INTO return_user;
+    
+    INSERT INTO Patient (PatientID, Age, BloodGroupID, HospitalID, Disease)
+    VALUES (return_user.userid, p_Age, p_blood_group_id, p_hospital_id, p_disease);
+    
+    RETURN return_user;
+END;
+$$;
+
+
 -- 25 get user by email
 CREATE OR REPLACE FUNCTION fn_get_user_by_email(p_email VARCHAR)
 RETURNS SETOF UserAccount   
