@@ -1,4 +1,4 @@
-import { newBloodRequest, getBloodUnit, getReqByHospital, fulfillRequestm } from '../models/bloodreq.js'
+import { newBloodRequest, getBloodUnit, getReqByHospital, fulfillRequestm, getAllRequests as fetchAllRequests } from '../models/bloodreq.js'
 
 const insertBloodRequest = async (req,res) => {
     try{
@@ -92,7 +92,22 @@ const fulfillRequest = async (req, res) => {
                     error: error.message
         });
     }
+}
 
+const getAllRequests = async (req, res) => {
+    try {
+        const result = await fetchAllRequests();
+        res.status(200).json({
+            message: "All blood requests retrieved successfully",
+            data: result
+        });
+    } catch (error) {
+        console.error("GetAllRequests error:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
+    }
 }
 
 
@@ -100,5 +115,6 @@ export {
     insertBloodRequest,
     getBloodUnits,
     getRequestsByHospital,
-    fulfillRequest
+    fulfillRequest,
+    getAllRequests
 }

@@ -63,9 +63,27 @@ const fulfillRequestm = async (data) => {
     }
 };
 
+const getAllRequests = async () => {
+    try {
+        const query = await db.execute(sql`
+            SELECT br.RequestID, br.PatientID, br.HospitalID, br.BloodGroupID, br.Quantity, 
+                   br.PatientDisease, br.RequestDate, br.FulfillmentStatus,
+                   b.BloodType, h.Name AS HospitalName
+            FROM BloodRequest br
+            JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
+            JOIN Hospital h ON br.HospitalID = h.HospitalID
+            ORDER BY br.RequestDate DESC
+        `);
+        return query;
+    } catch (err) {
+        throw err;
+    }
+};
+
 export {
     getBloodUnit,
     newBloodRequest,
     getReqByHospital,
-    fulfillRequestm
+    fulfillRequestm,
+    getAllRequests
 };
