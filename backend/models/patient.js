@@ -94,4 +94,4 @@ const getPatientRequests = async (patientId) => {
 };
 
 
-export { getCompatibleBloodForPatient, searchPatientByDisease, getBloodGroups, getHospitals, getPatientProfile, getPatientRequests };
+export { getCompatibleBloodForPatient, searchPatientByDisease, getBloodGroups, getHospitals, getPatientProfile, getPatientRequests, registerPatientModel };
