@@ -15,9 +15,9 @@ const authHeaders = () => {
 };
 
 const STATUS_STYLES = {
-    Pending:   "bg-amber-100 text-amber-700 border border-amber-200",
+    Pending: "bg-amber-100 text-amber-700 border border-amber-200",
     Fulfilled: "bg-green-100 text-green-700 border border-green-200",
-    Rejected:  "bg-red-100 text-red-700 border border-red-200",
+    Rejected: "bg-red-100 text-red-700 border border-red-200",
 };
 
 export default function PatientDashboard() {
@@ -38,10 +38,11 @@ export default function PatientDashboard() {
         bloodgroupid: "", quantity: 1, patientdisease: "", hospitalid: ""
     });
 
-    // Load profile + dropdowns on mount
+    // Load profile, dropdowns, and requests on mount
     useEffect(() => {
         fetchProfile();
         fetchDropdowns();
+        fetchRequests();
     }, []);
 
     // Load requests & compatible units when tab changes
@@ -96,7 +97,7 @@ export default function PatientDashboard() {
             ]);
             if (bgRes.status === "fulfilled") setBloodGroups(bgRes.value.data.data || []);
             if (hRes.status === "fulfilled") setHospitals(Array.isArray(hRes.value.data.data) ? hRes.value.data.data : []);
-        } catch {}
+        } catch { }
     };
 
     const handleLogout = () => {
@@ -129,9 +130,9 @@ export default function PatientDashboard() {
     };
 
     const tabs = [
-        { id: "overview",  label: "Overview",        icon: Activity },
-        { id: "requests",  label: "My Requests",     icon: ClipboardList },
-        { id: "new",       label: "New Request",     icon: PlusCircle },
+        { id: "overview", label: "Overview", icon: Activity },
+        { id: "requests", label: "My Requests", icon: ClipboardList },
+        { id: "new", label: "New Request", icon: PlusCircle },
         { id: "available", label: "Available Blood", icon: Beaker },
     ];
 
@@ -253,8 +254,8 @@ export default function PatientDashboard() {
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {[
                                             { label: "Total Requests", value: requests.length || "—", icon: ClipboardList, color: "blue" },
-                                            { label: "Pending",   value: pendingCount || "—",   icon: Clock,         color: "amber" },
-                                            { label: "Fulfilled", value: fulfilledCount || "—", icon: CheckCircle2,  color: "green" },
+                                            { label: "Pending", value: pendingCount || "—", icon: Clock, color: "amber" },
+                                            { label: "Fulfilled", value: fulfilledCount || "—", icon: CheckCircle2, color: "green" },
                                         ].map(({ label, value, icon: Icon, color }) => (
                                             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
                                                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center bg-${color}-50`}>
@@ -274,8 +275,8 @@ export default function PatientDashboard() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {[
                                                 { label: "Submit a Blood Request", icon: PlusCircle, tab: "new", color: "red" },
-                                                { label: "View My Requests",       icon: ClipboardList, tab: "requests", color: "blue" },
-                                                { label: "Find Compatible Blood",  icon: Beaker,       tab: "available", color: "green" },
+                                                { label: "View My Requests", icon: ClipboardList, tab: "requests", color: "blue" },
+                                                { label: "Find Compatible Blood", icon: Beaker, tab: "available", color: "green" },
                                             ].map(({ label, icon: Icon, tab, color }) => (
                                                 <button key={tab} onClick={() => setActiveTab(tab)}
                                                     className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border border-${color}-100 bg-${color}-50 text-${color}-700 hover:bg-${color}-100 transition-colors font-medium text-sm`}>
