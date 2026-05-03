@@ -613,3 +613,222 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+--getStaffProfile
+CREATE OR REPLACE FUNCTION fn_get_staff_profile(p_staffid INT)
+RETURNS TABLE (
+    staffid INT,
+    firstname VARCHAR,
+    lastname VARCHAR,
+    email VARCHAR,
+    contact VARCHAR,
+    gender CHAR,
+    "position" VARCHAR,
+    shifttiming VARCHAR,
+    locationname VARCHAR,
+    address VARCHAR,
+    capacity INT,
+    contactperson VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        s.StaffID,
+        ua.FirstName,
+        ua.LastName,
+        ua.Email,
+        ua.Contact,
+        ua.Gender,
+        s.Position,
+        s.ShiftTiming,
+        sl.LocationName,
+        sl.Address,
+        sl.Capacity,
+        sl.ContactPerson
+    FROM Staff s
+    JOIN UserAccount ua ON s.StaffID = ua.UserID
+    LEFT JOIN StorageLocation sl ON s.AssignedLocationID = sl.LocationID
+    WHERE s.StaffID = p_staffid;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+--getBloodGroups
+CREATE OR REPLACE VIEW vw_blood_groups AS
+SELECT * FROM BloodGroup ORDER BY BloodType;
+
+--getHospitals
+CREATE OR REPLACE VIEW vw_hospitals AS
+SELECT * FROM Hospital ORDER BY Name;
+
+--getPatientProfiles
+CREATE OR REPLACE FUNCTION fn_get_patient_profile(p_patientid INT)
+RETURNS TABLE (
+    patientid INT, firstname VARCHAR, lastname VARCHAR, email VARCHAR,
+    contact VARCHAR, gender CHAR, age INT, disease VARCHAR,
+    bloodtype CHAR(3), hospitalname VARCHAR, hospitallocation VARCHAR, hospitalid INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.PatientID, ua.FirstName, ua.LastName, ua.Email,
+        ua.Contact, ua.Gender, p.Age, p.Disease,
+        b.BloodType, h.Name AS HospitalName,
+        h.Location AS HospitalLocation, h.HospitalID
+    FROM Patient p
+    JOIN UserAccount ua ON p.PatientID = ua.UserID
+    JOIN BloodGroup b ON p.BloodGroupID = b.BloodGroupID
+    JOIN Hospital h ON p.HospitalID = h.HospitalID
+    WHERE p.PatientID = p_patientid;
+END;
+$$ LANGUAGE plpgsql;
+
+
+--getPatientRequests
+CREATE OR REPLACE FUNCTION fn_get_patient_requests(p_patientid INT)
+RETURNS TABLE (
+    requestid INT, quantity INT, patientdisease VARCHAR,
+    requestdate DATE, fulfillmentstatus VARCHAR,
+    bloodtype CHAR(3), hospitalname VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        br.RequestID, br.Quantity, br.PatientDisease,
+        br.RequestDate, br.FulfillmentStatus,
+        b.BloodType, h.Name AS HospitalName
+    FROM BloodRequest br
+    JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
+    JOIN Hospital h ON br.HospitalID = h.HospitalID
+    WHERE br.PatientID = p_patientid
+    ORDER BY br.RequestDate DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+-- get donor profile
+CREATE OR REPLACE FUNCTION fn_get_donor_profile(p_donorid INT)
+RETURNS TABLE (
+    donorid INT,
+    firstname VARCHAR,
+    lastname VARCHAR,
+    email VARCHAR,
+    contact VARCHAR,
+    gender CHAR,
+    age INT,
+    rating INT,
+    bloodtype CHAR(3)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        d.DonorID,
+        ua.FirstName,
+        ua.LastName,
+        ua.Email,
+        ua.Contact,
+        ua.Gender,
+        d.Age,
+        d.Rating,
+        b.BloodType
+    FROM Donor d
+    JOIN UserAccount ua ON d.DonorID = ua.UserID
+    JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+    WHERE d.DonorID = p_donorid;
+END;
+$$ LANGUAGE plpgsql;
+
+-- get matching blood requests for donor on blood group
+CREATE OR REPLACE FUNCTION fn_get_matching_requests(p_donorid INT)
+RETURNS TABLE (
+    requestid INT,
+    quantity INT,
+    patientdisease VARCHAR,
+    requestdate DATE,
+    fulfillmentstatus VARCHAR,
+    bloodtype CHAR(3),
+    hospitalname VARCHAR,
+    hospitallocation VARCHAR,
+    patientfirstname VARCHAR,
+    patientlastname VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        br.RequestID,
+        br.Quantity,
+        br.PatientDisease,
+        br.RequestDate,
+        br.FulfillmentStatus,
+        b.BloodType,
+        h.Name AS HospitalName,
+        h.Location AS HospitalLocation,
+        ua.FirstName AS PatientFirstName,
+        ua.LastName AS PatientLastName
+    FROM BloodRequest br
+    JOIN BloodGroup b ON br.BloodGroupID = b.BloodGroupID
+    JOIN Hospital h ON br.HospitalID = h.HospitalID
+    JOIN Patient p ON br.PatientID = p.PatientID
+    JOIN UserAccount ua ON p.PatientID = ua.UserID
+    WHERE br.BloodGroupID = (
+        SELECT d.BloodGroupID
+        FROM Donor d
+        WHERE d.DonorID = p_donorid
+    )
+    AND br.FulfillmentStatus = 'Pending'
+    ORDER BY br.RequestDate DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Reserve blood request
+CREATE OR REPLACE PROCEDURE sp_reserve_request(
+    p_request_id INT
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+
+    UPDATE BloodRequest
+    SET FulfillmentStatus = 'Reserved'
+    WHERE RequestID = p_request_id;
+END;
+$$;
+
+
+
+
+--add Staff:
+CREATE OR REPLACE FUNCTION fn_add_staff(
+    p_fname VARCHAR,
+    p_lname VARCHAR,
+    p_email VARCHAR,
+    p_password VARCHAR,
+    p_contact VARCHAR,
+    p_gender bpchar(1),
+    p_last_login TIMESTAMP,
+    p_position VARCHAR,
+    p_shift_timing VARCHAR,
+    p_assigned_location_id INT
+)
+RETURNS UserAccount
+LANGUAGE plpgsql AS $$
+DECLARE return_user useraccount;
+BEGIN
+    SELECT * FROM fn_add_user_wth_role(
+        p_fname, p_lname, p_email, p_password, p_contact, p_gender, p_last_login, 'Staff'::VARCHAR
+    ) INTO return_user;
+
+    INSERT INTO Staff (StaffID, Position, ShiftTiming, AssignedLocationID)
+        VALUES (return_user.userid, p_position, p_shift_timing, p_assigned_location_id);
+
+    RETURN return_user;
+END;
+$$;
+
+
+
+
+
+
