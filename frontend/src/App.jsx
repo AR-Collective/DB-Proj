@@ -12,6 +12,8 @@ import PatientDashboard from './views/PatientDashboard.jsx'
 import DonorDashboard from './views/DonorDashboard.jsx'
 import StaffDashboard from './pages/hospital/HospitalDashboard.jsx'
 import StaffRequests from './pages/hospital/HospitalRequestHistory.jsx'
+import HospitalRequestBlood from './pages/hospital/HospitalRequestBlood.jsx'
+import HospitalBloodStock from './pages/hospital/HospitalBloodStock.jsx'
 
 const PrivateRoutes = () => {
   const role = localStorage.getItem("role");
@@ -55,6 +57,8 @@ function App() {
           <Route path="/donor" element={<DonorDashboard />} />
           <Route path="/staff" element={<StaffDashboard />} />
           <Route path="/staff/requests" element={<StaffRequests />} />
+          <Route path="/hospital/request-blood" element={<HospitalRequestBlood />} />
+          <Route path="/hospital/blood-stock" element={<HospitalBloodStock />} />
         </Route>
       </Routes>
     </>
