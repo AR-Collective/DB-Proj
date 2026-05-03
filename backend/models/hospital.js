@@ -10,4 +10,13 @@ const getHospitalVsAvailableStock = async () => {
     }
 };
 
-export { getHospitalVsAvailableStock };
+const getStaffProfile = async (staffId) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM fn_get_staff_profile(${staffId})`);
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { getHospitalVsAvailableStock, getStaffProfile };

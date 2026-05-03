@@ -57,5 +57,41 @@ const registerPatientModel = async (userId, age, bloodType, hospitalId, disease)
     }
 };
 
+const getBloodGroups = async () => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM vw_blood_groups`);
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
 
-export { getCompatibleBloodForPatient, searchPatientByDisease, registerPatientModel };
+const getHospitals = async () => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM vw_hospitals`);
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const getPatientProfile = async (patientId) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM fn_get_patient_profile(${patientId})`);
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const getPatientRequests = async (patientId) => {
+    try {
+        const result = await db.execute(sql`SELECT * FROM fn_get_patient_requests(${patientId})`);
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+export { getCompatibleBloodForPatient, searchPatientByDisease, getBloodGroups, getHospitals, getPatientProfile, getPatientRequests, registerPatientModel };
