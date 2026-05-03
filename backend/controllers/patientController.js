@@ -3,11 +3,11 @@ import { newBloodRequest as createBloodRequestModel } from '../models/bloodreq.j
 
 const getCompatibleBlood = async (req, res) => {
     try {
-        const { patientid } = req.body
-        if (!patientid) {
-            return res.status(400).json({ message: "Patient ID is required" })
+        const patientId = req.user?.userid;
+        if (!patientId) {
+            return res.status(401).json({ message: "Unauthorized" })
         }
-        const result = await getCompatibleBloodForPatient(patientid)
+        const result = await getCompatibleBloodForPatient(patientId)
         res.status(200).json({ message: "Compatible blood retrieved successfully", data: result })
     } catch (error) {
         console.error("Get compatible blood error: ", error)
