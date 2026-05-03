@@ -32,7 +32,7 @@ const baseRegister = async (req, res, role) => {
         };
 
         const { userId, existingUser } = await registerUserModel(data);
-        
+
         // Register in Donor table if role is Donor
         if (role === 'Donor') {
             await registerDonorModel(userId, age, bloodGroup);
@@ -85,20 +85,8 @@ export const registerUser = async (data) => {
 };
 
 export const loginUser = async (req, res) => {
-    const cookie = req.cookies.auth_token;
-    if (cookie) {
-        try {
-            if (jwt.verify(cookie, process.env.JWT_SECRET)) {
-                const decoded = jwt.decode(cookie, process.env.JWT_SECRET);
-                console.log(decoded)
-                return res.status(200).json({ message: 'Auth Successful', user: { role: decoded.role } });
-            }
-        } catch (err) {
-            // continue to email/password login if cookie is invalid
-        }
-    }
-
     const { email, password, role } = req.body;
+
     if (!role) {
         return res.status(400).json({ message: 'Missing role' });
     }
@@ -112,29 +100,37 @@ export const loginUser = async (req, res) => {
         return res.status(404).json({ message: 'User not found.' });
     }
 
-    const isPasswordCorrect = await verifyPassword(record.Password, password);
-    if (!isPasswordCorrect) {
-        return res.status(400).json({ message: 'Invalid Password' });
+    // postgres.js returns lowercase column names
+    const storedHash = record.password || record.Password;
+    if (!storedHash) {
+        return res.status(500).json({ message: 'Account has no password set.' });
     }
 
-    const roles = await getUserRoles(record.UserID);
-    console.log(roles)
-    if (!roles.includes(role)) {
-        console.log("NOT FOUND")
-        throw err
+    const isPasswordCorrect = await verifyPassword(storedHash, password);
+    if (!isPasswordCorrect) {
+        return res.status(400).json({ message: 'Invalid password.' });
     }
+
+    const userId = record.userid || record.UserID;
+    const roles = await getUserRoles(userId);
+    if (!roles.includes(role)) {
+        return res.status(403).json({ message: `This account does not have the '${role}' role.` });
+    }
+
     const user = {
-        userid: record.UserID,
-        email: record.Email,
-        firstName: record.FirstName,
-        lastName: record.LastName,
-        contact: record.Contact,
-        gender: record.Gender,
+        userid: userId,
+        email: record.email || record.Email,
+        firstName: record.firstname || record.FirstName,
+        lastName: record.lastname || record.LastName,
+        contact: record.contact || record.Contact,
+        gender: record.gender || record.Gender,
         role: role,
         roles: roles,
     };
 
     const token = generateToken(user);
-    res.cookie('auth_token', token, { httpOnly: true, secure: true });
+    res.cookie('auth_token', token, { httpOnly: true, secure: false, sameSite: 'lax' });
     return res.json({ message: 'Auth Successful', token, user });
 };
+
+

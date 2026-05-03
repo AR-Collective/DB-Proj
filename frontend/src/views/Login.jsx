@@ -1,9 +1,8 @@
-"use client";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios'
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { useNavigate, Link } from "react-router-dom";
+import axios from 'axios';
+
+const WEBSITE_NAME = import.meta.env.VITE_WEBSITE_NAME || "BloodConnect";
 
 export default function Login() {
 	const [formData, setFormData] = useState({ email: "", password: "", role: "Staff" });
@@ -27,43 +26,39 @@ export default function Login() {
 			return;
 		}
 		try {
+			// Clear any stale session before attempting new login
+			localStorage.removeItem("auth_token");
+			localStorage.removeItem("user");
+			localStorage.removeItem("role");
+
+			const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/login`;
 			let res;
 			try {
-
-				const apiUrl = `${import.meta.env.VITE_API_URL || ""}/auth/login`;
-				res = await axios.post(apiUrl, formData, {
-					withCredentials: true
-				});
-
+				res = await axios.post(apiUrl, formData, { withCredentials: true });
 			} catch (error) {
-				let errorMessage = "Login failed";
-
-				if (error.response) {
-					// The server responded with an error status (e.g., 401, 404, 500)
-					// Even if it returned HTML, error.response.data will safely contain it
-					// Safely try to grab the JSON message, fallback to the status code
-					errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
-					throw new Error(errorMessage || "Login failed");
-				} else if (error.request) {
-					errorMessage = "No response from server. Check your network.";
-				}
-
+				const errorMessage =
+					error.response?.data?.message ||
+					(error.request ? "No response from server. Check your network." : "Login failed");
 				throw new Error(errorMessage);
 			}
-			let data = res.data.user
 
+			const { token, user } = res.data;
+			const role = user?.role || "unknown";
 
-			const role = data?.role || "unknown";
+			// Persist session
+			localStorage.setItem("auth_token", token);
+			localStorage.setItem("user", JSON.stringify(user));
 			localStorage.setItem("role", role);
-			const endpoints = {
-				'Donor': '/donor',
-				'Staff': '/staff',
-				'Patient': '/patient',
-				'Admin': '/admin',
-				'unknown': '/login'
-			}
 
-			navigate(endpoints[role], { replace: true });
+			const endpoints = {
+				Donor:   "/donor",
+				Staff:   "/staff",
+				Patient: "/patient",
+				Admin:   "/admin",
+				unknown: "/login",
+			};
+
+			navigate(endpoints[role] || "/login", { replace: true });
 		} catch (err) {
 			console.error("Login error:", err);
 			setError(err.message);
@@ -72,9 +67,24 @@ export default function Login() {
 		}
 	};
 
+
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-			<Header />
+		<div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+			{/* Logo / Brand — same as Header.jsx */}
+			<Link to="/" className="flex items-center gap-3 group mb-8">
+				<div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
+						<path d="M12 2C12 2 6 8 6 12a6 6 0 0012 0c0-4-6-10-6-10z" />
+					</svg>
+				</div>
+				<div className="flex flex-col">
+					<span className="text-lg font-bold text-gray-900 group-hover:text-red-600 transition-colors duration-200">
+						{WEBSITE_NAME}
+					</span>
+					<span className="text-xs text-gray-500 -mt-0.5 font-medium">Blood Management System</span>
+				</div>
+			</Link>
+
 			<div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md border border-gray-200">
 				<h2 className="text-2xl font-bold text-center text-gray-900 mb-4">
 					Login to Blood Bank
@@ -155,9 +165,9 @@ export default function Login() {
 
 				<p className="mt-6 text-center text-gray-600 text-sm">
 					Don't have an account?{" "}
-					<a href="/" className="text-red-600 font-medium hover:underline">
+					<Link to="/" className="text-red-600 font-medium hover:underline">
 						Register
-					</a>
+					</Link>
 				</p>
 			</div>
 		</div>

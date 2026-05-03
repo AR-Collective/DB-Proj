@@ -8,6 +8,7 @@ import Contact from './pages/Contact.jsx'
 import RegisterDonor from './pages/RegisterDonor.jsx'
 import RegisterPatient from './pages/RegisterPatient.jsx'
 import PatientDashboard from './pages/PatientDashboard.jsx'
+import DonorDashboard from './pages/DonorDashboard.jsx'
 
 const serverUrl = 'http://localhost:3000'
 
@@ -32,6 +33,7 @@ function App() {
       <Route path="/register/patient" element={<RegisterPatient />} />
       <Route element={<PrivateRoutes />}>
         <Route path="/patient" element={<PatientDashboard />} />
+        <Route path="/donor" element={<DonorDashboard />} />
       </Route>
     </Routes>
   );

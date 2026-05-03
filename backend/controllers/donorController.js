@@ -125,4 +125,54 @@ const getBloodGroups = async (req, res) => {
     }
 }
 
-export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups }
+const getMyDonorProfile = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const result = await db.execute(sql`
+            SELECT
+                d.DonorID,
+                ua.FirstName,
+                ua.LastName,
+                ua.Email,
+                ua.Contact,
+                ua.Gender,
+                d.Age,
+                d.Rating,
+                b.BloodType
+            FROM Donor d
+            JOIN UserAccount ua ON d.DonorID = ua.UserID
+            JOIN BloodGroup b ON d.BloodGroupID = b.BloodGroupID
+            WHERE d.DonorID = ${donorId}
+        `);
+
+        if (!result || result.length === 0) {
+            return res.status(404).json({ message: 'Donor profile not found' });
+        }
+
+        res.status(200).json({ message: 'Profile retrieved successfully', data: result[0] });
+    } catch (error) {
+        console.error('Get donor profile error:', error);
+        res.status(500).json({ message: 'Failed to retrieve profile', error: error.message });
+    }
+};
+
+const getMyDonationHistory = async (req, res) => {
+    try {
+        const donorId = req.user?.userid;
+        if (!donorId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const result = await db.execute(sql`SELECT * FROM fn_get_donor_history(${donorId})`);
+
+        res.status(200).json({
+            message: 'Donation history retrieved successfully',
+            data: Array.from(result)
+        });
+    } catch (error) {
+        console.error('Get donation history error:', error);
+        res.status(500).json({ message: 'Failed to retrieve history', error: error.message });
+    }
+};
+
+export { searchDonors, getDonations, rateDonor, getAverageDonations, getNeverTested, getBloodGroups, getMyDonorProfile, getMyDonationHistory }
