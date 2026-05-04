@@ -78,9 +78,7 @@ export default function PatientDashboard() {
     const fetchCompatibleUnits = async () => {
         setLoadingUnits(true);
         try {
-            const user = JSON.parse(localStorage.getItem("user") || "{}");
-            const res = await axios.post(`${API}/patient/compatible-blood`,
-                { patientid: user.userid }, authHeaders());
+            const res = await axios.get(`${API}/patient/compatible-blood`, authHeaders());
             setCompatibleUnits(Array.from(res.data.data || []));
         } catch {
             setError("Failed to load compatible blood units.");

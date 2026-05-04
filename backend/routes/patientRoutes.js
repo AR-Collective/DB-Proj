@@ -14,7 +14,7 @@ router.use(authorizeRoles('Patient'))
 router.get('/me', getMyProfile)
 router.get('/my-requests', getMyRequests)
 router.post('/request', createBloodRequest)
-router.post('/compatible-blood', getCompatibleBlood)
+router.get('/compatible-blood', getCompatibleBlood)
 router.post('/search-disease', searchByDisease)
 
 export default router
