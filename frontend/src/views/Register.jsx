@@ -290,7 +290,7 @@ export default function DonorRegisterForm() {
 			role: "donor",
 		};
 
-		const API_URL = `${import.meta.env.VITE_API_URL || ""}/api/auth/register`;
+		const API_URL = `${import.meta.env.VITE_API_URL || ""}/auth/register`;
 
 		console.log("Submitting Donor Data:", submissionPayload);
 

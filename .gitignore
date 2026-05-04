@@ -8,3 +8,4 @@ package-lock.json
 frontend/package-lock.json
 frontend/package.json
 package-lock.json
+.vercel

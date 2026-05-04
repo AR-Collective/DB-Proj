@@ -15,7 +15,14 @@ import testingRoutes from "./routes/testingRoutes.js";
 const app = express()
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: function (origin, callback) {
+        const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
+        if (!origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }))
 app.use(express.json())
@@ -30,20 +37,24 @@ app.use((err, req, res, next) => {
     next(err);
 });
 app.use(cookies())
-app.use('/auth', authRoutes)
-app.use('/auth/step', authStepRoutes)
-app.use('/bloodrequest', reqRoutes)
-app.use('/donor', donorRoutes)
-app.use('/inventory', inventoryRoutes)
-app.use('/hospital', hospitalRoutes)
-app.use('/patient', patientRoutes)
-app.use('/testing', testingRoutes)
+const baseRouter = express.Router();
+baseRouter.use('/auth', authRoutes)
+baseRouter.use('/auth/step', authStepRoutes)
+baseRouter.use('/bloodrequest', reqRoutes)
+baseRouter.use('/donor', donorRoutes)
+baseRouter.use('/inventory', inventoryRoutes)
+baseRouter.use('/hospital', hospitalRoutes)
+baseRouter.use('/patient', patientRoutes)
+baseRouter.use('/testing', testingRoutes)
+
+app.use('/', baseRouter);
+app.use('/_/backend', baseRouter);
 
 // Load database schema on startup
 async function startServer() {
     try {
         // await loadSchema();
-        app.listen(3000, () => console.log("Backend running on port 3000"));
+        app.listen(process.env.PORT || 3000, () => console.log("Backend running on port 3000"));
     } catch (err) {
         console.error('Failed to start server:', err.message);
         process.exit(1);
@@ -51,3 +62,4 @@ async function startServer() {
 }
 
 startServer();
+export default app
